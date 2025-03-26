@@ -1,0 +1,10 @@
+{
+  "sort": {
+    "price": 1,
+    "rarity": 1,
+    "gift_num": 1
+  },
+  "filter": {
+    "gift_num_range": [0, 990000]
+  }
+}

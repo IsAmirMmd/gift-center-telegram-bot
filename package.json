@@ -1,0 +1,14 @@
+{
+  "nodemonConfig": {
+    "ignore": [
+      "**.json"
+    ],
+    "delay": 2500
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "grammy": "^1.35.0",
+    "mysql2": "^3.13.0",
+    "sequelize": "^6.37.6"
+  }
+}

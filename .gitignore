@@ -1,0 +1,6 @@
+node_modules
+giftsData/**.json
+giftsOwner/**.json
+
+.env.development
+.env

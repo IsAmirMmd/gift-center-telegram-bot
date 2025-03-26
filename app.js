@@ -1,0 +1,532 @@
+const { Bot, InputFile, InlineKeyboard } = require("grammy");
+const grammy = require("grammy");
+const { fetchAllPages, getAllData, fetchPage } = require("./gifts");
+const { GIFTSNAME } = require("./CONST");
+const fsP = require("fs/promises");
+const { tonPrice } = require("./controllers/utils");
+const {
+  SHOW_CAHRT,
+  SHOW_CAHRT_ALL,
+  NEW_GIFT_MODEL,
+  NEW_GIFT_SERIES,
+  SHOW_GIFTS,
+  FLOOR_PRICE,
+  MODELS,
+} = require("./core/actions");
+const { clientKeyboard } = require("./core/keyboard");
+const { createChart } = require("./controllers/imageChart");
+const {
+  getFloorPricesForGift,
+  allGiftsChart,
+  createOrUpdateFloorPrice,
+} = require("./controllers/floorPrices");
+const Gift = require("./models/gift");
+const { newUser, updateStatus, getUser } = require("./controllers/users");
+const {
+  getAllGifts,
+  getGiftsModel,
+  getByModel,
+} = require("./controllers/giftServices");
+const { TOKEN } = require("./config/bot");
+const { Op } = require("sequelize");
+const FloorPrice = require("./models/floor");
+const {
+  addAlert,
+  getAllFilteredData,
+} = require("./controllers/filterServices");
+const User = require("./models/user");
+
+const bot = new Bot(TOKEN);
+bot.api.setMyCommands([
+  { command: "start", description: "start" },
+  { command: "search", description: "search by model" },
+]);
+
+async function checkAdmin(ctx, next) {
+  try {
+    const user = await getUser(ctx.chat.id);
+    if (user && user.admin) {
+      return next();
+    } else {
+      ctx.reply(
+        "You are not authorized to perform this action.\nFor Apply Contact @FuckYouAII"
+      );
+    }
+  } catch (error) {
+    console.error("Error checking admin status:", error);
+    ctx.reply("An error occurred while checking admin status.");
+  }
+}
+
+bot.callbackQuery(/gift_[]*/, async (ctx) => {
+  const gift = ctx.callbackQuery.data.split("_")[1];
+  await fetchAllPages(gift, ctx);
+});
+
+bot.hears(SHOW_GIFTS, checkAdmin, async (ctx) => {
+  try {
+    const keyboard = new InlineKeyboard();
+    const gifts = await getAllGifts();
+    gifts.forEach((gift, i) => {
+      i % 2
+        ? keyboard.text(gift.gift_name, `0_giftl_${gift.gift_name}`).row()
+        : keyboard.text(gift.gift_name, `0_giftl_${gift.gift_name}`);
+    });
+    await ctx.reply("Choose a gift:", {
+      reply_markup: keyboard,
+    });
+  } catch (error) {
+    ctx.reply(JSON.stringify(error, null, 2));
+  }
+});
+
+bot.callbackQuery(/[0-9]*_giftl_[^]*/, async (ctx) => {
+  const startPageNumber = ctx.callbackQuery.data.split("_")[0];
+  const gift = ctx.callbackQuery.data.split("_")[2];
+
+  try {
+    if (startPageNumber == 0) await fetchAllPages(gift, bot.api, false);
+    const data = await fsP.readFile(
+      `./giftsData/gifts_${gift.replace(" ", "")}.json`,
+      "utf8"
+    );
+
+    const jsonData = JSON.parse(data);
+
+    for (
+      let i = startPageNumber * 10;
+      i < Math.min(jsonData.data.length, startPageNumber * 10 + 10);
+      i++
+    ) {
+      const d = jsonData.data[i];
+      await new Promise((resolve) => setTimeout(resolve, 550)); // Delay for 3 seconds
+
+      await ctx.reply(
+        `
+#${d.gift_num}
+NFT : <a href="${d.link}">nft</a>
+BUY : <a href="${d.gift_id}">🛒</a>
+TON : ${parseFloat(d.price).toFixed(4)} 💎
+- - - -
+${Object.keys(d.attr)
+  .map((key) => `${key} : ${d.attr[key]}`)
+  .join("\n")}`,
+        {
+          parse_mode: "HTML",
+          reply_markup:
+            i % 10 === 9 || i === jsonData.data.length - 1
+              ? new InlineKeyboard().text(
+                  `Continue To ${parseInt(startPageNumber) + 1}`,
+                  `${parseInt(startPageNumber) + 1}_giftl_${gift}`
+                )
+              : undefined,
+        }
+      );
+    }
+  } catch (err) {
+    console.error("Error:", err);
+  }
+});
+
+bot.hears(SHOW_CAHRT, checkAdmin, async (ctx) => {
+  try {
+    const keyboard = new InlineKeyboard();
+    const gifts = await getAllGifts();
+
+    gifts.forEach((gift, i) => {
+      i % 2
+        ? keyboard.text(gift.gift_name, `chart_${gift.gift_name}`).row()
+        : keyboard.text(gift.gift_name, `chart_${gift.gift_name}`);
+    });
+    ctx
+      .reply("Select The Chart You Want", {
+        reply_markup: keyboard,
+      })
+      .catch(() => {});
+  } catch (error) {}
+});
+
+const symbolColors = [
+  "#16DB65",
+  "#8338EC",
+  "#3A86FF",
+  "#FB5607",
+  "#FFBE0B",
+  "#FF006E",
+  "#072AC8",
+  "#5C8001",
+  "#60EFFF",
+  "#FFFF00",
+  "#D62828",
+  "#E5989B",
+  "#99582A",
+  "#AA998F",
+  "#FF90B3",
+];
+
+bot.callbackQuery(/chart_[]*/, async (ctx) => {
+  try {
+    const gift = ctx.callbackQuery.data.split("_")[1];
+    const { floorPrice, minPrice } = await getFloorPricesForGift(gift);
+    const labels = floorPrice.map((d, i) => i + 1);
+    const prices = floorPrice.map((d) => d.price);
+
+    const colors = {
+      borderColor: symbolColors[0],
+      backgroundColor: symbolColors[0],
+    };
+
+    const preparedData = {
+      type: "line",
+      data: {
+        labels,
+        datasets: [
+          {
+            label: gift,
+            ...colors,
+            borderWidth: 1,
+            data: prices,
+            fill: false,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        legend: { position: "bottom" },
+        title: { display: true, text: gift + " Line Chart" },
+        scales: {
+          yAxes: [
+            {
+              ticks: {
+                min: minPrice * 0.9,
+              },
+            },
+          ],
+          xAxes: [
+            {
+              display: false,
+              ticks: {
+                fontSize: 0,
+              },
+            },
+          ],
+        },
+      },
+    };
+
+    const imageBuf = await createChart(preparedData);
+    ctx.replyWithPhoto(new InputFile(imageBuf), {
+      caption: `Here is Chart For ${gift}
+Current Price : ${floorPrice.slice(-1)[0].price} TON`,
+    });
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+bot.hears(SHOW_CAHRT_ALL, checkAdmin, async (ctx) => {
+  try {
+    const { allData, maxLength } = await allGiftsChart();
+    const labels = Array.from({ length: maxLength }).map((d, i) => i + 1);
+    const preparedData = {
+      type: "line",
+      data: {
+        labels,
+        datasets: Object.keys(allData).map((gift, i) => ({
+          label: gift,
+          borderColor: symbolColors[i % symbolColors.length],
+          backgroundColor: `${symbolColors[i % symbolColors.length]}60`,
+          borderWidth: 1,
+          data: allData[gift].floorPrice.map((p) => p.price),
+          fill: false,
+          pointRadius: 0,
+          pointHoverRadius: 0,
+        })),
+      },
+      options: {
+        responsive: true,
+        legend: {
+          position: "bottom",
+          labels: {
+            fontSize: 10, // Change this to make the legend text smaller
+            fontStyle: "normal",
+            fontColor: "#666", // Example of changing text color
+            fontFamily: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",
+            boxWidth: 10,
+          },
+        },
+        title: { display: true, text: "Line Charts" },
+        scales: {
+          yAxes: [
+            {
+              ticks: {
+                min: 0.55,
+              },
+            },
+          ],
+          xAxes: [
+            {
+              display: false,
+              ticks: {
+                fontSize: 0,
+              },
+            },
+          ],
+        },
+      },
+    };
+
+    const imageBuf = await createChart(preparedData);
+    ctx.replyWithPhoto(new InputFile(imageBuf), {
+      caption: `Here is Charts`,
+    });
+  } catch (error) {
+    console.log(error);
+  }
+  // ctx.reply();
+});
+
+bot.command("start", async (ctx) => {
+  try {
+    if (!(await getUser(ctx.chat.id)))
+      await newUser(
+        ctx.chat.id,
+        ctx.chat.username ?? ctx.chat.first_name,
+        "START"
+      ).catch((err) => console.log("Not Valid"));
+    ctx.reply("Procces started !", {
+      reply_markup: clientKeyboard,
+    });
+  } catch (error) {}
+});
+
+const medals = ["🥇", "🥈", "🥉"];
+bot.hears(FLOOR_PRICE, checkAdmin, async (ctx) => {
+  try {
+    const floors = await allGiftsChart();
+    const price = await tonPrice();
+    const data = floors.allData;
+    let sortedJson = Object.fromEntries(
+      Object.entries(data).sort(
+        ([, a], [, b]) => b.currentPrice - a.currentPrice
+      )
+    );
+
+    ctx.reply(`
+${Object.keys(sortedJson)
+  .map(
+    (key, i) =>
+      `${medals[i] ?? i + 1}. ${key}: ${parseFloat(
+        sortedJson[key].currentPrice
+      ).toFixed(3)} | ${(
+        parseFloat(sortedJson[key].currentPrice) * price
+      ).toFixed(3)}$`
+  )
+  .join("\n")}
+    `);
+  } catch (err) {
+    console.error("Error:", err);
+  }
+});
+
+bot.hears(MODELS, checkAdmin, async (ctx) => {
+  try {
+    const keyboard = new InlineKeyboard();
+    const gifts = await getAllGifts();
+    gifts.forEach((gift, i) => {
+      i % 2
+        ? keyboard.text(gift.gift_name, `model_${gift.gift_name}`).row()
+        : keyboard.text(gift.gift_name, `model_${gift.gift_name}`);
+    });
+
+    await ctx.reply("Choose a gift to check model:", {
+      reply_markup: keyboard,
+    });
+  } catch (error) {
+    ctx.reply(JSON.stringify(error, null, 2));
+  }
+});
+
+bot.callbackQuery(/model_[]*/, async (ctx) => {
+  try {
+    const gift = ctx.callbackQuery.data.split("_")[1];
+    const gift_meta = await getGiftsModel(gift);
+    const allModelsOfGift = gift_meta.gift_models.split("*").join("\n");
+    ctx.reply(allModelsOfGift);
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+bot.command("search", checkAdmin, async (ctx) => {
+  try {
+    const gift_model = ctx.message.text
+      .split("/search")[1]
+      .trim()
+      .toLowerCase();
+
+    let preferes = [];
+
+    const gifts = await getByModel(gift_model);
+    gifts.forEach((gift) => {
+      const pres = gift.gift_models
+        .split("*")
+        .filter((m) =>
+          m.toLowerCase().includes(gift_model.trim().toLowerCase())
+        );
+
+      pres.forEach((p) => {
+        const gift_name = gift.gift_name; // Assuming gift_name is the parent gift name
+        const model = p.trim();
+
+        // Check if the gift_name and model pair is not already in preferes
+        if (
+          !preferes.some(
+            (pref) => pref.gift_name === gift_name && pref.model === model
+          )
+        ) {
+          preferes.push({ gift_name, model });
+        }
+      });
+    });
+
+    ctx.reply(`searching for ${gift_model} . . . `);
+    if (preferes.length == 0) return ctx.reply("No Data Found !");
+
+    preferes.forEach(async (pref) => {
+      const { gift_name, model: orgModel } = pref;
+      let model = orgModel;
+      if (!/^[a-zA-Z]/.test(model)) model = model.slice(3);
+
+      const foundNFT = await fetchPage(1, [gift_name], [model], []).catch(
+        (err) => console.log(err)
+      );
+      if (foundNFT.length == 0) {
+        return ctx.reply(
+          `Parent: ${gift_name}
+Model: ${model}
+https://gifts.coffin.meme/${encodeURIComponent(
+            gift_name.toLowerCase()
+          )}/${encodeURIComponent(model.split("(")[0].trim())}.png`,
+          {
+            reply_markup: new grammy.InlineKeyboard().text(
+              "Add To Filters",
+              `filter_${gift_name}_${model}_0`
+            ),
+          }
+        );
+      }
+
+      const list = `
+⚠️🚨 ${model}
+Price: ${(Number(foundNFT[0].price) * 1.1).toFixed(3)} 💎
+Here is The Details:
+#${gift_name.replace(" ", "_")}
+#${foundNFT[0]?.gift_num}
+GIFT: <a href="https://t.me/nft/${gift_name
+        .replace(" ", "")
+        .replace(`'`, "")}-${foundNFT[0].gift_num}">NFT</a>
+LINK: <a href="${`https://t.me/tonnel_network_bot/gift?startapp=${foundNFT[0].gift_id}`}">🛒</a>
+⚠️🚨`;
+
+      ctx.reply(list, {
+        parse_mode: "HTML",
+        reply_markup: new InlineKeyboard()
+          .text(
+            "Add To Filters",
+            `filter_${gift_name}_${model}_${(
+              Number(foundNFT[0].price) * 1.1
+            ).toFixed(3)}`
+          )
+          .row()
+          .text("Show Others", `0_giftl_${gift_name}`),
+      });
+    });
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+bot.callbackQuery(/filter_[]*/, async (ctx) => {
+  try {
+    const [cm, gift_name, model, price] = ctx.callbackQuery.data.split("_");
+    await createOrUpdateFloorPrice(gift_name, price, model);
+    await addAlert(gift_name, model);
+    ctx.reply(`New Filter Added ${gift_name} - ${model} : ${price}`);
+  } catch (error) {
+    ctx.reply("Error In Adding new filter !");
+    console.log(error);
+  }
+});
+
+bot.hears("db", async (c) => {
+  GIFTSNAME.map(async (gift_name) => {
+    await Gift.create({
+      gift_name,
+      gift_models: "",
+    });
+  });
+});
+
+bot.hears(NEW_GIFT_SERIES, checkAdmin, async (ctx) => {
+  try {
+    const gifts = await getAllGifts();
+    const keyboard = new InlineKeyboard();
+    gifts.map(async ({ gift_name }, i) => {
+      if (i % 2) keyboard.row();
+      keyboard.text(gift_name);
+    });
+    await updateStatus(ctx.chat.id, NEW_GIFT_SERIES);
+    ctx.reply("Paste the models you wanna add to", {
+      reply_markup: keyboard,
+    });
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+bot.start().then(() => {
+  console.log("Connected successfully");
+});
+
+setInterval(async () => {
+  try {
+    await getAllData(bot.api, true);
+    const filters = await getAllFilteredData();
+    filters.map(async (f) => {
+      await fetchAllPages(f.gifts, bot.api, true, f.models);
+    });
+  } catch (err) {
+    console.error("Error fetching data:", err);
+  }
+}, 30 * 1000);
+
+setInterval(async () => {
+  try {
+    const threeDaysAgo = new Date();
+    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+
+    await FloorPrice.destroy({
+      where: {
+        createdAt: {
+          [Op.lt]: threeDaysAgo,
+        },
+      },
+    });
+    console.log("Old floor prices removed successfully");
+  } catch (err) {
+    console.error("Error removing old floor prices:", err);
+  }
+}, 8 * 60 * 60 * 1000);
+
+async function setUpListener(ctx, next) {
+  if (!ctx) return;
+  try {
+  } catch (err) {
+    console.error(err);
+  }
+  next();
+}
+
+bot.use(setUpListener);
+module.exports = bot;
