@@ -40,7 +40,7 @@ const bot = new Bot(TOKEN);
 bot.api.setMyCommands([
   { command: "start", description: "start" },
   { command: "search", description: "search by model" },
-]);
+]).catch(err=>{});
 
 async function checkAdmin(ctx, next) {
   try {
