@@ -37,10 +37,12 @@ const {
 const User = require("./models/user");
 
 const bot = new Bot(TOKEN);
-bot.api.setMyCommands([
-  { command: "start", description: "start" },
-  { command: "search", description: "search by model" },
-]).catch(err=>{});
+bot.api
+  .setMyCommands([
+    { command: "start", description: "start" },
+    { command: "search", description: "search by model" },
+  ])
+  .catch((err) => {});
 
 async function checkAdmin(ctx, next) {
   try {
@@ -48,13 +50,15 @@ async function checkAdmin(ctx, next) {
     if (user && user.admin) {
       return next();
     } else {
-      ctx.reply(
-        "You are not authorized to perform this action.\nFor Apply Contact @FuckYouAII"
-      );
+      ctx
+        .reply(
+          "You are not authorized to perform this action.\nFor Apply Contact @FuckYouAII"
+        )
+        .catch(() => {});
     }
   } catch (error) {
     console.error("Error checking admin status:", error);
-    ctx.reply("An error occurred while checking admin status.");
+    ctx.reply("An error occurred while checking admin status.").catch(() => {});
   }
 }
 

@@ -109,8 +109,8 @@ const allGiftsChart = async () => {
     const gifts = await getAllGifts();
     gifts.forEach(async (gift) => {
       await getFloorPricesForGift(gift.gift_name).then((res) => {
-        if (maxLabel < res.floorPrice.length) {
-          maxLabel = res.floorPrice.length;
+        if (maxLabel < res?.floorPrice?.length) {
+          maxLabel = res?.floorPrice?.length;
         }
         return (temp[gift.gift_name] = res);
       });
