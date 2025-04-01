@@ -98,6 +98,8 @@ async function fetchAllPages(gift_name, ctx, forAlert = true, model = "") {
             price: gift.price * 1.1,
             gift_id: `https://t.me/tonnel_network_bot/gift?startapp=${gift.gift_id}`,
             link: `https://t.me/nft/${gift_name
+              .split("-")
+              .join("")
               .replace(" ", "")
               .replace(`'`, "")
               .replace(`-`, "")}-${gift.gift_num}`,
