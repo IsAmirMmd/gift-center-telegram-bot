@@ -99,7 +99,8 @@ async function fetchAllPages(gift_name, ctx, forAlert = true, model = "") {
             gift_id: `https://t.me/tonnel_network_bot/gift?startapp=${gift.gift_id}`,
             link: `https://t.me/nft/${gift_name
               .replace(" ", "")
-              .replace(`'`, "")}-${gift.gift_num}`,
+              .replace(`'`, "")
+              .replace(`-`, "")}-${gift.gift_num}`,
           }))
         );
       else {
