@@ -115,7 +115,7 @@ const allGiftsChart = async () => {
         return (temp[gift.gift_name] = res);
       });
     });
-    await Promise.all(promises);
+    
     await new Promise((resolve) => setTimeout(resolve, 500));
     return { allData: temp, maxLength: maxLabel };
   } catch (error) {
