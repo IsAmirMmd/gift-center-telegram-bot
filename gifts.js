@@ -147,6 +147,7 @@ Price : ${currentData?.price.toFixed(3)} 💎
 Here is The Details : 
 #${gift_name.replace(" ", "_")}
 #${currentData?.gift_num}
+#${currentData?.attr?.model.split(" ").join("_")}
 GIFT : <a href="${currentData?.link}">NFT</a>
 LINK : <a href="${currentData?.gift_id}">🛒</a>
 ⚠️🚨`,
