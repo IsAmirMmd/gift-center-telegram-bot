@@ -143,9 +143,10 @@ async function fetchAllPages(gift_name, ctx, forAlert = true, model = "") {
             .sendMessage(
               admin.user_id,
               `⚠️🚨
-Price : ${currentData?.price.toFixed(3)} - ${
-                (1 - currentData?.price / latestPrice).toFixed(3) * 100
-              }% 💎
+Price : ${currentData?.price.toFixed(3)} - ${(
+                (1 - currentData?.price / latestPrice) *
+                100
+              ).toFixed(3)}% 💎
 PrevPrice : ${latestPrice?.toFixed(3)} ⬛️
 Here is The Details : 
 #${gift_name.replace(" ", "_")}
