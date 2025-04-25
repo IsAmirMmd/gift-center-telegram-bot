@@ -54,9 +54,26 @@ async function getAdmins() {
   }
 }
 
+async function isEditor(user_id) {
+  try {
+    const user = await User.findOne({
+      where: { user_id },
+    });
+    if (user && user.role === "EDITOR") {
+      return true;
+    } else {
+      return false;
+    }
+  } catch (error) {
+    console.error("Error checking editor status:", error);
+    throw error;
+  }
+}
+
 module.exports = {
   newUser,
   updateStatus,
   getUser,
   getAdmins,
+  isEditor,
 };

@@ -18,6 +18,9 @@ const actions = {
     RESET: "🔄 Reset Filters",
   },
   MARKET_HISTORY: "📜 Market History",
+
+  SHOW_USERS: "👤 Show Users",
+  REMOVE_GIFT: "❌ Remove Gift",
 };
 
 module.exports = {

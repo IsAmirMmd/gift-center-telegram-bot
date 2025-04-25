@@ -11,4 +11,5 @@ module.exports = {
     database: process.env.MYSQL_DATABASE,
     dialect: process.env.MYSQL_DIALECT,
   },
+  authData : process.env.AUTH_DATA,
 };

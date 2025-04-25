@@ -20,8 +20,12 @@ const User = sequelize.define("User", {
     type: DataTypes.STRING,
     allowNull: true,
   },
+  role: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    defaultValue: "VIEWER",
+  },
 });
 
 module.exports = User;
-
-// User.sync({ force: true });
+// User.sync({ alter: true });

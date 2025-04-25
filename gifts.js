@@ -7,28 +7,40 @@ const {
 } = require("./controllers/floorPrices");
 const { getAllGifts } = require("./controllers/giftServices");
 const { getAdmins } = require("./controllers/users");
+const { authData } = require("./config/bot");
 let headersList = {
   Accept: "*/*",
   "User-Agent": "Thunder Client (https://www.thunderclient.com)",
   "Content-Type": "application/json",
 };
 
-async function saleHistory() {
+// ,INTERNAL_SALE
+async function saleHistory(gift, model, tag = "") {
   const url = "https://gifts2.tonnel.network/api/saleHistory";
   let bodyContent = {
-    authData: "",
+    authData: authData,
     page: 1,
-    limit: 50,
-    type: "SALE,INTERNAL_SALE",
+    limit: 10,
+    type: "ALL",
     filter: {
-      gift_name: "Durov's Cap",
-      model: "Asterix (0.5%)",
+      gift_name: gift,
+      model,
+      ...(tag ? { gift_num: tag } : {}),
     },
     sort: {
       timestamp: -1,
       gift_id: -1,
     },
   };
+
+  let response = await fetch(url, {
+    method: "POST",
+    body: JSON.stringify(bodyContent),
+    headers: headersList,
+  }).catch((err) => {
+    console.log(err);
+  });
+  return response.json();
   const data = [
     {
       gift_id: 125609,
@@ -96,6 +108,7 @@ async function fetchAllPages(gift_name, ctx, forAlert = true, model = "") {
               backdrop: gift.backdrop,
             },
             price: gift.price * 1.1,
+            mainPrice: gift.price,
             gift_id: `https://t.me/tonnel_network_bot/gift?startapp=${gift.gift_id}`,
             link: `https://t.me/nft/${gift_name
               .split("-")
@@ -137,7 +150,8 @@ async function fetchAllPages(gift_name, ctx, forAlert = true, model = "") {
     if (
       (Number(currentData?.price) ?? 0).toFixed(3) < (latestPrice ?? 999999)
     ) {
-      if (forAlert) {
+      const percentage = (1 - currentData?.price / latestPrice) * 100;
+      if (forAlert || (!forAlert && percentage > 10)) {
         for (const admin of await getAdmins()) {
           await ctx
             .sendMessage(
@@ -157,10 +171,14 @@ LINK : <a href="${currentData?.gift_id}">🛒</a>
 ⚠️🚨`,
               {
                 parse_mode: "HTML",
-                reply_markup: new InlineKeyboard().text(
-                  "Show Others",
-                  `0_giftl_${gift_name}`
-                ),
+                reply_markup: new InlineKeyboard()
+                  .text("Show Others ➕", `0_giftl_${gift_name}`)
+                  .row()
+                  .text(
+                    "Is Bought ❓",
+                    `isbought_${gift_name}_${currentData?.attr?.model}_${currentData?.gift_num}_${currentData?.mainPrice}`
+                  )
+                  .row(),
               }
             )
             .catch((err) => console.log(err));
@@ -182,4 +200,4 @@ const getAllData = async (ctx, forAlert = false) => {
   });
 };
 
-module.exports = { fetchAllPages, getAllData, fetchPage };
+module.exports = { fetchAllPages, getAllData, fetchPage, saleHistory };

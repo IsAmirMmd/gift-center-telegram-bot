@@ -493,22 +493,6 @@ bot.hears("db", async (c) => {
   });
 });
 
-bot.hears(NEW_GIFT_SERIES, checkAdmin, async (ctx) => {
-  try {
-    const gifts = await getAllGifts();
-    const keyboard = new InlineKeyboard();
-    gifts.map(async ({ gift_name }, i) => {
-      if (i % 2) keyboard.row();
-      keyboard.text(gift_name);
-    });
-    await updateStatus(ctx.chat.id, NEW_GIFT_SERIES);
-    ctx.reply("Paste the models you wanna add to", {
-      reply_markup: keyboard,
-    });
-  } catch (error) {
-    console.log(error);
-  }
-});
 
 bot.start().then(() => {
   console.log("Connected successfully");

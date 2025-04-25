@@ -1,5 +1,7 @@
 const { Op } = require("sequelize");
 const Gift = require("../models/gift");
+const FloorPrice = require("../models/floor");
+const { FilteredData } = require("../models/filter");
 
 async function newGiftName(gift_name, models = []) {
   try {
@@ -34,7 +36,7 @@ async function getGiftsModel(gift_name) {
 
 async function getAllGifts() {
   try {
-    const gift = await Gift.findAll({});
+    const gift = await Gift.findAll({ raw: true });
     return gift;
   } catch (error) {
     console.error("Error gift:", error);
@@ -86,6 +88,23 @@ async function getByModel(model) {
   }
 }
 
+async function removeGift(gift_name) {
+  try {
+    const gift = await Gift.destroy({
+      where: { gift_name },
+    });
+    const floors = await FloorPrice.destroy({
+      where: { gift_name },
+    });
+    const filered = await FilteredData.destroy({
+      where: { gifts: gift_name },
+    });
+  } catch (error) {
+    console.error("Error User:", error);
+    throw error;
+  }
+}
+
 module.exports = {
   newGiftName,
   updateModels,
@@ -93,4 +112,5 @@ module.exports = {
   getAllGifts,
   updateNotif,
   getByModel,
+  removeGift,
 };

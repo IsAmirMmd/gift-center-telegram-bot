@@ -24,6 +24,7 @@ const {
 const { backgrounds } = require("../controllers/functions");
 const { TFilteredData } = require("../models/filter");
 const User = require("../models/user");
+const { saleHistory } = require("../gifts");
 
 // Middleware to check if the user is an admin
 async function checkAdmin(ctx, next) {
@@ -41,6 +42,10 @@ async function checkAdmin(ctx, next) {
     ctx.reply("An error occurred while checking admin status.");
   }
 }
+
+bot.hears(MARKET_HISTORY, checkAdmin, async (ctx) => {
+  const history = await saleHistory();
+});
 
 async function handleInlineQuery(ctx) {
   const query = ctx.inlineQuery.query;
@@ -120,6 +125,26 @@ async function checkAndSaveGift(ctx) {
     console.log(error);
   }
 }
+
+bot.callbackQuery(/isbought_[]*/, checkAdmin, async (ctx) => {
+  try {
+    const [cm, gift, model, tag, price] = ctx.callbackQuery.data.split("_");
+    const history = await saleHistory(gift, model, tag);
+    const isBought = history.some(
+      (item) =>
+        item.price == price && item.gift_name == gift && item.model == model
+    );
+    if (isBought) {
+      ctx.answerCallbackQuery("This gift is already bought 🛒").catch((err) => {
+        console.log(err);
+      });
+    } else {
+      ctx.answerCallbackQuery("This gift is on sale 🛍").catch((err) => {
+        console.log(err);
+      });
+    }
+  } catch (error) {}
+});
 
 bot.hears(FLOOR_UPDATE, checkAdmin, async (ctx) => {
   try {

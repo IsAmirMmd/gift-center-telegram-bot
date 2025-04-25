@@ -11,7 +11,10 @@ const {
   SHOW_GIFTS,
   SMART_FILTER,
   MARKET_HISTORY,
+  SHOW_USERS,
+  REMOVE_GIFT,
 } = require("./actions");
+
 const clientKeyboard = new grammy.Keyboard()
   .text(SMART_FILTER)
   .row()
@@ -26,6 +29,13 @@ const clientKeyboard = new grammy.Keyboard()
   .row()
   .text(SHOW_CAHRT)
   .text(SHOW_CAHRT_ALL)
+  .row()
   .resized();
 
-module.exports = { clientKeyboard };
+const adminKeyboard = clientKeyboard
+  .row()
+  .text(SHOW_USERS)
+  .row()
+  .text(REMOVE_GIFT);
+
+module.exports = { clientKeyboard, adminKeyboard };
