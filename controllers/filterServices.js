@@ -43,7 +43,9 @@ async function deleteFilteredDataByUserId(user_id) {
 // Service to get all filtered data records
 async function getAllFilteredData() {
   try {
-    const allFilteredData = await FilteredData.findAll();
+    const allFilteredData = await FilteredData.findAll({
+      raw: true,
+    });
     return allFilteredData;
   } catch (error) {
     console.error("Error in getAllFilteredData:", error);

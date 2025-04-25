@@ -19,6 +19,7 @@ const {
   getFloorPricesForGift,
   allGiftsChart,
   createOrUpdateFloorPrice,
+  getFloorPriceByModel,
 } = require("./controllers/floorPrices");
 const Gift = require("./models/gift");
 const { newUser, updateStatus, getUser } = require("./controllers/users");
@@ -202,7 +203,7 @@ bot.callbackQuery(/chart_[]*/, async (ctx) => {
           yAxes: [
             {
               ticks: {
-                min: minPrice * 0.9,
+                min: minPrice,
               },
             },
           ],
@@ -308,7 +309,25 @@ const medals = ["🥇", "🥈", "🥉"];
 bot.hears(FLOOR_PRICE, checkAdmin, async (ctx) => {
   try {
     const floors = await allGiftsChart();
-    const price = await tonPrice();
+    const filtereds = await getAllFilteredData();
+    const filteredDataPrices = filtereds.map(async (f) => {
+      const price = await getFloorPriceByModel(f.gifts, f.models);
+      return {
+        gift_name: f.gifts,
+        model: f.models,
+        currentPrice: price?.price ?? 0,
+      };
+    });
+
+    const filteredPrices = await Promise.all(filteredDataPrices);
+    let filteredMsg = `Filtered One : `;
+
+    filteredPrices
+      .sort((a, b) => b.currentPrice - a.currentPrice)
+      .map((filtered) => {
+        filteredMsg += `\n${filtered.gift_name} - ${filtered.model} : ${filtered.currentPrice}`;
+      });
+
     const data = floors.allData;
     let sortedJson = Object.fromEntries(
       Object.entries(data).sort(
@@ -322,12 +341,11 @@ ${Object.keys(sortedJson)
     (key, i) =>
       `${medals[i] ?? i + 1}. ${key}: ${parseFloat(
         sortedJson[key].currentPrice
-      ).toFixed(3)} | ${(
-        parseFloat(sortedJson[key].currentPrice) * price
-      ).toFixed(3)}$`
+      ).toFixed(3)} | ${parseFloat(sortedJson[key].currentPrice).toFixed(3)}$`
   )
   .join("\n")}
-    `);
+    
+${filteredMsg}`);
   } catch (err) {
     console.error("Error:", err);
   }
@@ -394,8 +412,8 @@ bot.command("search", checkAdmin, async (ctx) => {
       });
     });
 
-    ctx.reply(`searching for ${gift_model} . . . `);
-    if (preferes.length == 0) return ctx.reply("No Data Found !");
+    await ctx.reply(`searching for ${gift_model} . . . `);
+    if (preferes.length == 0) return await ctx.reply("No Data Found !");
 
     preferes.forEach(async (pref) => {
       const { gift_name, model: orgModel } = pref;
@@ -428,8 +446,11 @@ Here is The Details:
 #${gift_name.replace(" ", "_")}
 #${foundNFT[0]?.gift_num}
 GIFT: <a href="https://t.me/nft/${gift_name
+        .split("-")
+        .join("")
         .replace(" ", "")
-        .replace(`'`, "")}-${foundNFT[0].gift_num}">NFT</a>
+        .replace(`'`, "")
+        .replace(`-`, "")}-${foundNFT[0].gift_num}">NFT</a>
 LINK: <a href="${`https://t.me/tonnel_network_bot/gift?startapp=${foundNFT[0].gift_id}`}">🛒</a>
 ⚠️🚨`;
 

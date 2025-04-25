@@ -107,7 +107,7 @@ const allGiftsChart = async () => {
     let temp = {};
     let maxLabel = -Infinity;
     const gifts = await getAllGifts();
-    const promises=gifts.forEach(async (gift) => {
+    const promises = gifts.map(async (gift) => {
       await getFloorPricesForGift(gift.gift_name).then((res) => {
         if (maxLabel < res?.floorPrice?.length) {
           maxLabel = res?.floorPrice?.length;
@@ -115,8 +115,8 @@ const allGiftsChart = async () => {
         return (temp[gift.gift_name] = res);
       });
     });
-    
-    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    await Promise.all(promises);
     return { allData: temp, maxLength: maxLabel };
   } catch (error) {
     console.log(error);

@@ -143,11 +143,14 @@ async function fetchAllPages(gift_name, ctx, forAlert = true, model = "") {
             .sendMessage(
               admin.user_id,
               `⚠️🚨
-Price : ${currentData?.price.toFixed(3)} 💎
+Price : ${currentData?.price.toFixed(3)} - ${
+                (1 - currentData?.price / latestPrice).toFixed(3) * 100
+              }% 💎
+PrevPrice : ${latestPrice?.toFixed(3)} ⬛️
 Here is The Details : 
 #${gift_name.replace(" ", "_")}
 #${currentData?.gift_num}
-#${currentData?.attr?.model.split(" ").join("_")}
+#${currentData?.attr?.model.trim().split(" ").join("_")}
 GIFT : <a href="${currentData?.link}">NFT</a>
 LINK : <a href="${currentData?.gift_id}">🛒</a>
 ⚠️🚨`,
@@ -170,7 +173,7 @@ LINK : <a href="${currentData?.gift_id}">🛒</a>
 
 const getAllData = async (ctx, forAlert = false) => {
   const gifts = await getAllGifts();
-  gifts.forEach(async ({ gift_name, checkFloor }) => {
+  gifts.map(async ({ gift_name, checkFloor }) => {
     await fetchAllPages(gift_name, ctx, forAlert && checkFloor).catch((er) =>
       console.error(er)
     );
