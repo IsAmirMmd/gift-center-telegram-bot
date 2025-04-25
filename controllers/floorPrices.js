@@ -68,7 +68,7 @@ async function getFloorPricesForGift(gift_name) {
     }
 
     const minPrice = await FloorPrice.min("price", { where: { gift_name } });
-    floorPrice.map((fl, i) => {
+    const promises = floorPrice.map(async (fl, i) => {
       if (i > 0) {
         const prev = floorPrice[i - 1].price;
         const curr = fl.price;
@@ -77,6 +77,9 @@ async function getFloorPricesForGift(gift_name) {
         }
       } else floorArray.push({ price: fl.price });
     });
+
+    await Promise.all(promises);
+
     return {
       floorPrice: floorArray,
       minPrice,
