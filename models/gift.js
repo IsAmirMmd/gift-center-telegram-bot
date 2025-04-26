@@ -25,7 +25,7 @@ const Gift = sequelize.define("Gift", {
 
 module.exports = Gift;
 
-Gift.sync({ alter: true })
+Gift.sync({ alter: false })
   .then(() => {
     console.log("Gift table synced successfully");
   })
