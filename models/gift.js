@@ -17,11 +17,15 @@ const Gift = sequelize.define("Gift", {
     allowNull: true,
     defaultValue: true,
   },
+  fullCompare: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
 });
 
 module.exports = Gift;
 
-Gift.sync({ force: false })
+Gift.sync({ alter: true })
   .then(() => {
     console.log("Gift table synced successfully");
   })

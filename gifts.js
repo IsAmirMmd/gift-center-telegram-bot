@@ -8,6 +8,7 @@ const {
 const { getAllGifts } = require("./controllers/giftServices");
 const { getAdmins } = require("./controllers/users");
 const { authData } = require("./config/bot");
+const { getFilterByGift } = require("./controllers/filterServices");
 let headersList = {
   Accept: "*/*",
   "User-Agent": "Thunder Client (https://www.thunderclient.com)",
@@ -88,7 +89,13 @@ async function fetchPage(page, gift_names = [], models = []) {
   }
 }
 
-async function fetchAllPages(gift_name, ctx, forAlert = true, model = "") {
+async function fetchAllPages(
+  gift_name,
+  ctx,
+  forAlert = true,
+  model = "",
+  fullCompare = false
+) {
   try {
     let allData = [];
     for (let page = 1; page <= 5; page++) {
@@ -129,10 +136,11 @@ async function fetchAllPages(gift_name, ctx, forAlert = true, model = "") {
         JSON.stringify({ data: allData, count: allData.length }, null, 2)
       );
 
+    const filteredGiftFromSameModel = await getFilterByGift(gift_name);
     const currentData = allData[0];
     const latestRecord = model
       ? await getFloorPriceByModel(gift_name, model)
-      : await getFloorPrice(gift_name);
+      : await getFloorPrice(gift_name, filteredGiftFromSameModel);
 
     const latestPrice = latestRecord?.price ?? 999;
     const latestModel = latestRecord?.model ?? "nmd";
@@ -151,7 +159,7 @@ async function fetchAllPages(gift_name, ctx, forAlert = true, model = "") {
       (Number(currentData?.price) ?? 0).toFixed(3) < (latestPrice ?? 999999)
     ) {
       const percentage = (1 - currentData?.price / latestPrice) * 100;
-      if (forAlert || (!forAlert && percentage > 10)) {
+      if (forAlert || (fullCompare && percentage > 10)) {
         for (const admin of await getAdmins()) {
           await ctx
             .sendMessage(
@@ -192,10 +200,14 @@ LINK : <a href="${currentData?.gift_id}">🛒</a>
 
 const getAllData = async (ctx, forAlert = false) => {
   const gifts = await getAllGifts();
-  gifts.map(async ({ gift_name, checkFloor }) => {
-    await fetchAllPages(gift_name, ctx, forAlert && checkFloor).catch((er) =>
-      console.error(er)
-    );
+  gifts.map(async ({ gift_name, checkFloor, fullCompare }) => {
+    await fetchAllPages(
+      gift_name,
+      ctx,
+      forAlert && checkFloor,
+      "",
+      fullCompare
+    ).catch((er) => console.error(er));
     await new Promise((resolve) => setTimeout(resolve, 550));
   });
 };

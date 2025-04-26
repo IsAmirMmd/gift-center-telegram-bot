@@ -1,3 +1,4 @@
+const { Op } = require("sequelize");
 const FloorPrice = require("../models/floor");
 const { getAllGifts } = require("./giftServices");
 
@@ -15,10 +16,15 @@ async function createOrUpdateFloorPrice(gift_name, price, model) {
   }
 }
 
-async function getFloorPrice(gift_name) {
+async function getFloorPrice(gift_name, excludeModel = []) {
   try {
     const floorPrice = await FloorPrice.findOne({
-      where: { gift_name },
+      where: {
+        gift_name,
+        ...(excludeModel.length > 0
+          ? { model: { [Op.not]: excludeModel } }
+          : {}),
+      },
       order: [["last_updated", "DESC"]],
     });
 

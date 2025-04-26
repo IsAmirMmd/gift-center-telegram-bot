@@ -341,7 +341,7 @@ ${Object.keys(sortedJson)
     (key, i) =>
       `${medals[i] ?? i + 1}. ${key}: ${parseFloat(
         sortedJson[key].currentPrice
-      ).toFixed(3)} | ${parseFloat(sortedJson[key].currentPrice).toFixed(3)}$`
+      ).toFixed(3)}`
   )
   .join("\n")}
     
@@ -492,7 +492,6 @@ bot.hears("db", async (c) => {
     });
   });
 });
-
 
 bot.start().then(() => {
   console.log("Connected successfully");

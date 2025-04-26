@@ -8,12 +8,14 @@ const {
   SMART_FILTER,
   FILTERS,
   MARKET_HISTORY,
+  FLOOR_COMPARE,
 } = require("../core/actions");
 const path = require("path");
 const {
   newGiftName,
   getAllGifts,
   updateNotif,
+  updateFullCompare,
 } = require("../controllers/giftServices");
 const {
   getFilteredDataByUserId,
@@ -143,7 +145,28 @@ bot.callbackQuery(/isbought_[]*/, checkAdmin, async (ctx) => {
         console.log(err);
       });
     }
-  } catch (error) {}
+  } catch (error) {
+    console.log(error);
+    ctx.answerCallbackQuery("Error in checking gift").catch((err) => {});
+  }
+});
+
+bot.hears(FLOOR_COMPARE, checkAdmin, async (ctx) => {
+  try {
+    const gifts = await getAllGifts();
+    const keyboard = new grammy.InlineKeyboard();
+    gifts.map(({ gift_name, fullCompare }, i) => {
+      keyboard
+        .text(gift_name, `fcompare_${gift_name}`)
+        .text(fullCompare ? "🔔" : "🔕", `fcompare_${gift_name}`)
+        .row();
+    });
+    ctx.reply("Here is the list :", {
+      reply_markup: keyboard,
+    });
+  } catch (error) {
+    console.error(error);
+  }
 });
 
 bot.hears(FLOOR_UPDATE, checkAdmin, async (ctx) => {
@@ -162,6 +185,28 @@ bot.hears(FLOOR_UPDATE, checkAdmin, async (ctx) => {
   } catch (error) {
     console.error(error);
   }
+});
+
+bot.callbackQuery(/fcompare_[]*/, checkAdmin, async (ctx) => {
+  try {
+    const gift = ctx.callbackQuery.data.split("_")[1];
+    await updateFullCompare(gift);
+    const gifts = await getAllGifts();
+    const keyboard = new grammy.InlineKeyboard();
+    gifts.map(({ gift_name, fullCompare }, i) => {
+      keyboard
+        .text(gift_name, `fcompare_${gift_name}`)
+        .text(fullCompare ? "🔔" : "🔕", `fcompare_${gift_name}`)
+        .row();
+    });
+    ctx.editMessageText(
+      `Edited : ${gift}
+Here is the list :`,
+      {
+        reply_markup: keyboard,
+      }
+    );
+  } catch (error) {}
 });
 
 bot.callbackQuery(/ufloor_[]*/, checkAdmin, async (ctx) => {

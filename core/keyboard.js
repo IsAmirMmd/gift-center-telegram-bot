@@ -13,6 +13,7 @@ const {
   MARKET_HISTORY,
   SHOW_USERS,
   REMOVE_GIFT,
+  FLOOR_COMPARE,
 } = require("./actions");
 
 const clientKeyboard = new grammy.Keyboard()
@@ -24,6 +25,7 @@ const clientKeyboard = new grammy.Keyboard()
   .text(MARKET_HISTORY)
   .text(NEW_GIFT_SERIES)
   .row()
+  .text(FLOOR_COMPARE)
   .text(MODELS)
   .text(FLOOR_PRICE)
   .row()

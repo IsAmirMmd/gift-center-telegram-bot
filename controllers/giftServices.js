@@ -72,6 +72,20 @@ async function updateNotif(gift_name) {
   }
 }
 
+async function updateFullCompare(gift_name) {
+  try {
+    const gift = await Gift.findOne({
+      where: { gift_name },
+    });
+    gift.fullCompare = !gift.fullCompare;
+    await gift.save();
+    return gift;
+  } catch (error) {
+    console.error("Error User:", error);
+    throw error;
+  }
+}
+
 async function getByModel(model) {
   try {
     const gifts = await Gift.findAll({
@@ -113,4 +127,5 @@ module.exports = {
   updateNotif,
   getByModel,
   removeGift,
+  updateFullCompare,
 };

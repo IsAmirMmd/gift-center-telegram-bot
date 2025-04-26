@@ -73,11 +73,25 @@ async function deleteAlert(id) {
   }
 }
 
+async function getFilterByGift(gifts) {
+  try {
+    const fi = await FilteredData.findAll({
+      where: { gifts },
+      raw: true,
+    });
+
+    return (fi || []).map((item) => item.models);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
 module.exports = {
   createOrUpdateFilteredData,
   getFilteredDataByUserId,
   deleteFilteredDataByUserId,
   getAllFilteredData,
   addAlert,
+  getFilterByGift,
   deleteAlert,
 };

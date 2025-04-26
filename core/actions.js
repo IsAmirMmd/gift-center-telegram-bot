@@ -6,6 +6,7 @@ const actions = {
   NEW_GIFT_SERIES: "🎉 New Gift",
   MODELS: "👀 See Models",
   FLOOR_UPDATE: "🔔 Floor Notif ?",
+  FLOOR_COMPARE: "🔍 Full Compare",
   FLOOR_PRICE: "💰 Floor Prices",
   SHOW_GIFTS: "🎁 Show Gifts",
   SMART_FILTER: "🔍 Smart Filter",
