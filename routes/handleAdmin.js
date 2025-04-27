@@ -125,7 +125,7 @@ bot.hears(REVOKE_ACCESS, checkEditor, async (ctx) => {
 bot.callbackQuery(/revoke_[]*/, checkEditor, async (ctx) => {
   try {
     const userId = ctx.callbackQuery.data.split("_")[1];
-    demoteAdmin(userId);
+    await demoteAdmin(userId);
     ctx
       .answerCallbackQuery(`Access revoked for user ID: ${userId}.`)
       .catch(() => {});
