@@ -133,7 +133,7 @@ bot.callbackQuery(/revoke_[]*/, checkEditor, async (ctx) => {
     const admins = await getAdmins();
     const keyboard = new InlineKeyboard();
     for (const admin of admins) {
-      keyboard.text(`@${admin.fullname}`, `revoke_${admin.user_id}`);
+      keyboard.text(`@${admin.fullname}`, `revoke_${admin.user_id}`).row();
     }
     ctx.editMessageReplyMarkup({
       reply_markup: keyboard,
