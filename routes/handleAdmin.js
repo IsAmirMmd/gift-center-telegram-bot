@@ -110,10 +110,9 @@ bot.hears(REVOKE_ACCESS, checkEditor, async (ctx) => {
     const admins = await getAdmins();
     const keyboard = new InlineKeyboard();
     for (const admin of admins) {
-      keyboard.text(
-        `@${admin.fullname}-${admin.user_id}`,
-        `revoke_${admin.user_id}`
-      );
+      keyboard
+        .text(`@${admin.fullname}-${admin.user_id}`, `revoke_${admin.user_id}`)
+        .row();
     }
     ctx.reply("Choose an admin to revoke access:", {
       reply_markup: keyboard,
