@@ -19,15 +19,15 @@ const {
 const clientKeyboard = new grammy.Keyboard()
   .text(SMART_FILTER)
   .row()
-  .text(FLOOR_UPDATE)
   .text(SHOW_GIFTS)
-  .row()
-  .text(MARKET_HISTORY)
   .text(NEW_GIFT_SERIES)
+  .text(REMOVE_GIFT)
   .row()
-  .text(FLOOR_COMPARE)
   .text(MODELS)
   .text(FLOOR_PRICE)
+  .row()
+  .text(FLOOR_COMPARE)
+  .text(FLOOR_UPDATE)
   .row()
   .text(SHOW_CAHRT)
   .text(SHOW_CAHRT_ALL)
@@ -35,9 +35,9 @@ const clientKeyboard = new grammy.Keyboard()
   .resized();
 
 const adminKeyboard = clientKeyboard
+  .text("- - - - - - - - - - -")
   .row()
   .text(SHOW_USERS)
-  .row()
-  .text(REMOVE_GIFT);
+  .row();
 
 module.exports = { clientKeyboard, adminKeyboard };
