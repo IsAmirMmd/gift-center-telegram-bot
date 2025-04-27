@@ -507,7 +507,7 @@ setInterval(async () => {
   } catch (err) {
     console.error("Error fetching data:", err);
   }
-}, 30 * 1000);
+}, 12 * 1000);
 
 setInterval(async () => {
   try {
@@ -525,7 +525,7 @@ setInterval(async () => {
   } catch (err) {
     console.error("Error removing old floor prices:", err);
   }
-}, 8 * 60 * 60 * 1000);
+}, 60 * 60 * 1000);
 
 async function setUpListener(ctx, next) {
   if (!ctx) return;
