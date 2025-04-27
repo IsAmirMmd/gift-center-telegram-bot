@@ -22,6 +22,7 @@ const actions = {
 
   SHOW_USERS: "👤 Show Users",
   REMOVE_GIFT: "❌ Remove Gift",
+  REVOKE_ACCESS: "🔒 Revoke Access",
 };
 
 module.exports = {

@@ -1,8 +1,18 @@
 const { InlineKeyboard } = require("grammy");
 const bot = require("../app");
 const { getAllGifts, removeGift } = require("../controllers/giftServices");
-const { getUser, updateStatus } = require("../controllers/users");
-const { SHOW_USERS, REMOVE_GIFT, NEW_GIFT_SERIES } = require("../core/actions");
+const {
+  getUser,
+  updateStatus,
+  getAdmins,
+  demoteAdmin,
+} = require("../controllers/users");
+const {
+  SHOW_USERS,
+  REMOVE_GIFT,
+  NEW_GIFT_SERIES,
+  REVOKE_ACCESS,
+} = require("../core/actions");
 const User = require("../models/user");
 
 async function checkEditor(ctx, next) {
@@ -92,6 +102,45 @@ bot.hears(NEW_GIFT_SERIES, checkEditor, async (ctx) => {
       .catch(() => {});
   } catch (error) {
     console.log(error);
+  }
+});
+
+bot.hears(REVOKE_ACCESS, checkEditor, async (ctx) => {
+  try {
+    const admins = await getAdmins();
+    const keyboard = new InlineKeyboard();
+    for (const admin of admins) {
+      keyboard.text(
+        `@${admin.fullname}-${admin.user_id}`,
+        `revoke_${admin.user_id}`
+      );
+    }
+    ctx.reply("Choose an admin to revoke access:", {
+      reply_markup: keyboard,
+    });
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+bot.callbackQuery(/revoke_[]*/, checkEditor, async (ctx) => {
+  try {
+    const userId = ctx.callbackQuery.data.split("_")[1];
+    demoteAdmin(userId);
+    ctx
+      .answerCallbackQuery(`Access revoked for user ID: ${userId}.`)
+      .catch(() => {});
+    const admins = await getAdmins();
+    const keyboard = new InlineKeyboard();
+    for (const admin of admins) {
+      keyboard.text(`@${admin.fullname}`, `revoke_${admin.user_id}`);
+    }
+    ctx.editMessageReplyMarkup({
+      reply_markup: keyboard,
+    });
+  } catch (error) {
+    console.error("Error revoking access:", error);
+    ctx.reply("An error occurred while revoking access.").catch(() => {});
   }
 });
 

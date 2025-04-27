@@ -1,6 +1,7 @@
 const { Op } = require("sequelize");
 const FloorPrice = require("../models/floor");
 const { getAllGifts } = require("./giftServices");
+const { FilteredData } = require("../models/filter");
 
 async function createOrUpdateFloorPrice(gift_name, price, model) {
   try {
@@ -59,10 +60,30 @@ async function getFloorPriceByModel(gift_name, model) {
 
 async function getFloorPricesForGift(gift_name) {
   try {
-    const floorPrice = await FloorPrice.findAll({
-      where: { gift_name },
-      order: [["last_updated", "ASC"]],
+    const filteedModels = await FilteredData.findAll({
+      where: { gifts: gift_name },
+      raw: true,
+    }).then((res) => res.map((item) => item.models));
+
+    const filteredDataFloors = {};
+    const filteredDataPromises = filteedModels.map(async (model) => {
+      const floors = await FloorPrice.findAll({
+        where: { gift_name, model },
+        order: [["last_updated", "ASC"]],
+        raw: true,
+      });
+
+      filteredDataFloors[model] = floors;
     });
+
+    await Promise.all(filteredDataPromises);
+
+    const floorPrice = await FloorPrice.findAll({
+      where: { gift_name, model: { [Op.notIn]: filteedModels } },
+      order: [["last_updated", "ASC"]],
+      raw: true,
+    });
+
     const floorArray = [];
 
     if (!floorPrice) {
@@ -70,6 +91,7 @@ async function getFloorPricesForGift(gift_name) {
         floorPrice: [],
         minPrice: 0,
         currentPrice: 0,
+        filteredData: [],
       };
     }
 
@@ -90,6 +112,7 @@ async function getFloorPricesForGift(gift_name) {
       floorPrice: floorArray,
       minPrice,
       currentPrice: floorArray.slice(-1)[0].price,
+      filteredData: filteredDataFloors,
     };
   } catch (error) {
     console.error("Error fetching floor price:", error);
@@ -132,6 +155,26 @@ const allGiftsChart = async () => {
     return { allData: {}, maxLength: 0 };
   }
 };
+
+async function generateFloorPriceData() {
+  try {
+    const data = [];
+    for (let i = 1; i <= 100; i++) {
+      data.push({
+        gift_name: `Vintage Cigar`,
+        model: `Rudolph (3%)`,
+        price: Math.floor(Math.random() * 100) + 1, // Random price between 1 and 1000
+        last_updated: new Date(),
+      });
+    }
+
+    await FloorPrice.bulkCreate(data);
+    return { message: "100 floor price records generated successfully" };
+  } catch (error) {
+    console.error("Error generating floor price data:", error);
+    throw error;
+  }
+}
 
 module.exports = {
   createOrUpdateFloorPrice,

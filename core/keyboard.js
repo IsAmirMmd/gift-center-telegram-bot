@@ -14,10 +14,13 @@ const {
   SHOW_USERS,
   REMOVE_GIFT,
   FLOOR_COMPARE,
+  FILTERS,
+  REVOKE_ACCESS,
 } = require("./actions");
 
 const clientKeyboard = new grammy.Keyboard()
   .text(SMART_FILTER)
+  .text(FILTERS.SEARCH)
   .row()
   .text(SHOW_GIFTS)
   .text(NEW_GIFT_SERIES)
@@ -38,6 +41,7 @@ const adminKeyboard = clientKeyboard
   .text("- - - - - - - - - - -")
   .row()
   .text(SHOW_USERS)
+  .text(REVOKE_ACCESS)
   .row();
 
 module.exports = { clientKeyboard, adminKeyboard };

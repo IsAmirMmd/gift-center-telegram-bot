@@ -22,11 +22,13 @@ const {
   createOrUpdateFilteredData,
   getAllFilteredData,
   deleteAlert,
+  getFilterByGift,
+  getFilterById,
 } = require("../controllers/filterServices");
 const { backgrounds } = require("../controllers/functions");
 const { TFilteredData } = require("../models/filter");
 const User = require("../models/user");
-const { saleHistory } = require("../gifts");
+const { saleHistory, fetchPage } = require("../gifts");
 
 // Middleware to check if the user is an admin
 async function checkAdmin(ctx, next) {
@@ -244,6 +246,73 @@ bot.hears(SMART_FILTER, checkAdmin, async (ctx) => {
   }
 });
 
+bot.hears(FILTERS.SEARCH, checkAdmin, async (ctx) => {
+  try {
+    const filters = await getAllFilteredData();
+    const keyIns = new grammy.InlineKeyboard();
+    filters.map((f) => {
+      keyIns.text(`${f.gifts} - ${f.models}`, `showf_${f.id}`).row();
+    });
+    ctx.reply("Select your filter more specifly", { reply_markup: keyIns });
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+bot.callbackQuery(/showf_[]*/, checkAdmin, async (ctx) => {
+  try {
+    const id = ctx.callbackQuery.data.split("_")[1];
+    const filterData = await getFilterById(id);
+    const giftInfo = await fetchPage(
+      1,
+      [filterData.gifts],
+      [filterData.models]
+    ).catch(() => {
+      ctx.ca;
+    });
+    const currentData = {
+      gift_name: giftInfo[0].name,
+      gift_num: giftInfo[0].gift_num,
+      attr: {
+        model: giftInfo[0].model,
+        symbol: giftInfo[0].symbol,
+        backdrop: giftInfo[0].backdrop,
+      },
+      price: giftInfo[0].price * 1.1,
+      mainPrice: giftInfo[0].price,
+      gift_id: `https://t.me/tonnel_network_bot/gift?startapp=${giftInfo[0].gift_id}`,
+      link: `https://t.me/nft/${giftInfo[0].name
+        .split("-")
+        .join("")
+        .replace(" ", "")
+        .replace(`'`, "")
+        .replace(`-`, "")}-${giftInfo[0].gift_num}`,
+    };
+    await ctx.reply(
+      `⚠️🚨
+Price : ${currentData?.price.toFixed(3)} 💎
+#${currentData?.attr?.model.trim().replace(/\ /, "_")}
+GIFT : <a href="${currentData?.link}">NFT</a>
+LINK : <a href="${currentData?.gift_id}">🛒</a>`,
+      {
+        parse_mode: "HTML",
+        reply_markup: new grammy.InlineKeyboard()
+          .text(
+            "➕",
+            `0_giftl_${currentData?.gift_name}_${currentData?.attr.model}`
+          )
+          .text(
+            "❓",
+            `isbought_${currentData?.gift_name}_${currentData?.attr?.model}_${currentData?.gift_num}_${currentData?.mainPrice}`
+          )
+          .row(),
+      }
+    );
+  } catch (error) {
+    console.log(error);
+  }
+});
+
 bot.callbackQuery(/deletef_[0-9]*/, checkAdmin, async (ctx) => {
   try {
     const id = ctx.callbackQuery.data.split("_")[1];
@@ -355,13 +424,6 @@ bot.callbackQuery(/filterGift_[]*/, checkAdmin, async (ctx) => {
       reply_markup: keyIns,
     });
   } catch (error) {}
-});
-
-bot.hears(FILTERS.SEARCH, checkAdmin, async (ctx) => {
-  try {
-  } catch (error) {
-    console.error(error);
-  }
 });
 
 bot.command("adminer", async (ctx) => {

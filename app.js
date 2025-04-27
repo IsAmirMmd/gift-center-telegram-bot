@@ -88,6 +88,7 @@ bot.hears(SHOW_GIFTS, checkAdmin, async (ctx) => {
 bot.callbackQuery(/[0-9]*_giftl_[^]*/, async (ctx) => {
   const startPageNumber = ctx.callbackQuery.data.split("_")[0];
   const gift = ctx.callbackQuery.data.split("_")[2];
+  console.log(ctx.callbackQuery.data.split("_"));
 
   try {
     if (startPageNumber == 0) await fetchAllPages(gift, bot.api, false);
@@ -152,7 +153,6 @@ bot.hears(SHOW_CAHRT, checkAdmin, async (ctx) => {
 });
 
 const symbolColors = [
-  "#16DB65",
   "#8338EC",
   "#3A86FF",
   "#FB5607",
@@ -164,6 +164,7 @@ const symbolColors = [
   "#FFFF00",
   "#D62828",
   "#E5989B",
+  "#16DB65",
   "#99582A",
   "#AA998F",
   "#FF90B3",
@@ -172,13 +173,18 @@ const symbolColors = [
 bot.callbackQuery(/chart_[]*/, async (ctx) => {
   try {
     const gift = ctx.callbackQuery.data.split("_")[1];
-    const { floorPrice, minPrice } = await getFloorPricesForGift(gift);
+    const { floorPrice, minPrice, filteredData } = await getFloorPricesForGift(
+      gift
+    );
+
+    await ctx.editMessageText("Generating Chart...").catch(() => {});
+
     const labels = floorPrice.map((d, i) => i + 1);
     const prices = floorPrice.map((d) => d.price);
 
     const colors = {
-      borderColor: symbolColors[0],
-      backgroundColor: symbolColors[0],
+      borderColor: symbolColors.slice(-1)[0],
+      backgroundColor: symbolColors.slice(-1)[0] + "60",
     };
 
     const preparedData = {
@@ -187,17 +193,40 @@ bot.callbackQuery(/chart_[]*/, async (ctx) => {
         labels,
         datasets: [
           {
-            label: gift,
+            label: "!Filters",
             ...colors,
             borderWidth: 1,
             data: prices,
             fill: false,
           },
+          ...Object.keys(filteredData).map((model, i) => {
+            return {
+              label: model,
+              borderColor: symbolColors[i % symbolColors.length],
+              backgroundColor: `${symbolColors[i % symbolColors.length]}60`,
+              borderWidth: 1,
+              data: Array.from({ length: labels.length }).map((d, i) => {
+                const diff = labels.length - filteredData[model]?.length;
+                if (diff > 0)
+                  for (let j = 0; j < diff; j++) {
+                    filteredData[model].unshift({ price: 0 });
+                  }
+                return filteredData[model][i]?.price ?? 0;
+              }),
+              fill: false,
+            };
+          }),
         ],
       },
       options: {
         responsive: true,
-        legend: { position: "bottom" },
+        legend: {
+          position: "bottom",
+          labels: {
+            fontSize: 10,
+            boxWidth: 10,
+          },
+        },
         title: { display: true, text: gift + " Line Chart" },
         scales: {
           yAxes: [
@@ -220,10 +249,15 @@ bot.callbackQuery(/chart_[]*/, async (ctx) => {
     };
 
     const imageBuf = await createChart(preparedData);
-    ctx.replyWithPhoto(new InputFile(imageBuf), {
-      caption: `Here is Chart For ${gift}
+    await ctx
+      .replyWithPhoto(new InputFile(imageBuf), {
+        caption: `Here is Chart For ${gift}
 Current Price : ${floorPrice.slice(-1)[0].price} TON`,
-    });
+      })
+      .catch((err) => {
+        console.log(err);
+        ctx.reply(err);
+      });
   } catch (error) {
     console.log(error);
   }
@@ -525,7 +559,7 @@ setInterval(async () => {
   } catch (err) {
     console.error("Error removing old floor prices:", err);
   }
-}, 60 * 60 * 1000);
+}, 8 * 60 * 60 * 1000);
 
 async function setUpListener(ctx, next) {
   if (!ctx) return;

@@ -83,7 +83,7 @@ async function fetchPage(page, gift_names = [], models = []) {
       body: JSON.stringify(bodyContent),
       headers: headersList,
     });
-    return response.json();
+    return response && response.ok ? await response.json() : [];
   } catch (error) {
     console.log("error", error);
   }
@@ -170,9 +170,6 @@ Price : ${currentData?.price.toFixed(3)} - ${(
                 100
               ).toFixed(3)}% 💎
 PrevPrice : ${latestPrice?.toFixed(3)} ⬛️
-Here is The Details : 
-#${gift_name.replace(" ", "_")}
-#${currentData?.gift_num}
 #${currentData?.attr?.model.trim().split(" ").join("_")}
 GIFT : <a href="${currentData?.link}">NFT</a>
 LINK : <a href="${currentData?.gift_id}">🛒</a>
@@ -180,10 +177,12 @@ LINK : <a href="${currentData?.gift_id}">🛒</a>
               {
                 parse_mode: "HTML",
                 reply_markup: new InlineKeyboard()
-                  .text("Show Others ➕", `0_giftl_${gift_name}`)
-                  .row()
                   .text(
-                    "Is Bought ❓",
+                    "➕",
+                    `0_giftl_${gift_name}_${currentData?.attr?.model}_${currentData?.gift_num}_${currentData?.mainPrice}`
+                  )
+                  .text(
+                    "❓",
                     `isbought_${gift_name}_${currentData?.attr?.model}_${currentData?.gift_num}_${currentData?.mainPrice}`
                   )
                   .row(),

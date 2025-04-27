@@ -46,6 +46,7 @@ async function getAdmins() {
   try {
     const admins = await User.findAll({
       where: { admin: true },
+      raw: true,
     });
     return admins;
   } catch (error) {
@@ -70,10 +71,17 @@ async function isEditor(user_id) {
   }
 }
 
+const demoteAdmin = async (user_id) => {
+  const user = await getUser(user_id);
+  user.admin = false;
+  await user.save();
+};
+
 module.exports = {
   newUser,
   updateStatus,
   getUser,
   getAdmins,
+  demoteAdmin,
   isEditor,
 };

@@ -86,6 +86,18 @@ async function getFilterByGift(gifts) {
   }
 }
 
+async function getFilterById(id) {
+  try {
+    const fi = await FilteredData.findOne({
+      where: { id },
+      raw: true,
+    });
+    return fi;
+  } catch (error) {
+    console.error(error);
+  }
+}
+
 module.exports = {
   createOrUpdateFilteredData,
   getFilteredDataByUserId,
@@ -93,5 +105,6 @@ module.exports = {
   getAllFilteredData,
   addAlert,
   getFilterByGift,
+  getFilterById,
   deleteAlert,
 };
