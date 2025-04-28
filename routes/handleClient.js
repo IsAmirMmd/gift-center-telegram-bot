@@ -155,12 +155,12 @@ bot.callbackQuery(/isbought_[]*/, checkAdmin, async (ctx) => {
         },
         body: JSON.stringify({
           ref: "",
-          authData:
-            "user=%7B%22id%22%3A199419831%2C%22first_name%22%3A%22Amir%22%2C%22last_name%22%3A%22%22%2C%22username%22%3A%22isAmirMmd%22%2C%22language_code%22%3A%22en%22%2C%22is_premium%22%3Atrue%2C%22allows_write_to_pm%22%3Atrue%2C%22photo_url%22%3A%22https%3A%5C%2F%5C%2Ft.me%5C%2Fi%5C%2Fuserpic%5C%2F320%5C%2F3YQY-Uk64qtRMcLH8OLSxesdeFDyla4fTl1rh5zHQGk.svg%22%7D&chat_instance=3870811618993780258&chat_type=private&start_param=4010772&auth_date=1745853124&signature=UD59pwiG-E9KwF470kfwsRfO-znqWykQb9kHRl6J6fc_PS7Aj3dFmCabmayFT1QwyJ_AL9dDVYkoY2Y5b5pEDA&hash=9353e6ee117f66d513903f7aa039d528b720ed1765294c7738a87512a61527f6",
+          authData: "",
         }),
         method: "POST",
       }
     );
+
     response.ok &&
       (await response
         .json()
