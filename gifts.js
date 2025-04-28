@@ -116,6 +116,7 @@ async function fetchAllPages(
             },
             price: gift.price * 1.1,
             mainPrice: gift.price,
+            id: gift.gift_id,
             gift_id: `https://t.me/tonnel_network_bot/gift?startapp=${gift.gift_id}`,
             link: `https://t.me/nft/${gift_name
               .split("-")
@@ -183,7 +184,7 @@ LINK : <a href="${currentData?.gift_id}">🛒</a>
                   )
                   .text(
                     "❓",
-                    `isbought_${gift_name}_${currentData?.attr?.model}_${currentData?.gift_num}_${currentData?.mainPrice}`
+                    `isbought_${gift_name}_${currentData?.attr?.model}_${currentData?.gift_num}_${currentData?.mainPrice}_${currentData?.id}`
                   )
                   .row(),
               }

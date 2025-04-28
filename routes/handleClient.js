@@ -132,21 +132,63 @@ async function checkAndSaveGift(ctx) {
 
 bot.callbackQuery(/isbought_[]*/, checkAdmin, async (ctx) => {
   try {
-    const [cm, gift, model, tag, price] = ctx.callbackQuery.data.split("_");
-    const history = await saleHistory(gift, model, tag);
-    const isBought = history.some(
-      (item) =>
-        item.price == price && item.gift_name == gift && item.model == model
+    const [cm, gift, model, tag, price, gift_id] =
+      ctx.callbackQuery.data.split("_");
+
+    const response = await fetch(
+      "https://gifts2.tonnel.network/api/giftData/" + (gift_id || 4004240),
+      {
+        headers: {
+          accept: "*/*",
+          "accept-language": "en-US,en;q=0.9",
+          "content-type": "application/json",
+          priority: "u=1, i",
+          "sec-ch-ua":
+            '"Microsoft Edge WebView2";v="135", "Chromium";v="135", "Not-A.Brand";v="8", "Microsoft Edge";v="135"',
+          "sec-ch-ua-mobile": "?0",
+          "sec-ch-ua-platform": '"Windows"',
+          "sec-fetch-dest": "empty",
+          "sec-fetch-mode": "cors",
+          "sec-fetch-site": "cross-site",
+          Referer: "https://tonnel-gift.vercel.app/",
+          "Referrer-Policy": "strict-origin-when-cross-origin",
+        },
+        body: JSON.stringify({
+          ref: "",
+          authData:
+            "user=%7B%22id%22%3A199419831%2C%22first_name%22%3A%22Amir%22%2C%22last_name%22%3A%22%22%2C%22username%22%3A%22isAmirMmd%22%2C%22language_code%22%3A%22en%22%2C%22is_premium%22%3Atrue%2C%22allows_write_to_pm%22%3Atrue%2C%22photo_url%22%3A%22https%3A%5C%2F%5C%2Ft.me%5C%2Fi%5C%2Fuserpic%5C%2F320%5C%2F3YQY-Uk64qtRMcLH8OLSxesdeFDyla4fTl1rh5zHQGk.svg%22%7D&chat_instance=3870811618993780258&chat_type=private&start_param=4010772&auth_date=1745853124&signature=UD59pwiG-E9KwF470kfwsRfO-znqWykQb9kHRl6J6fc_PS7Aj3dFmCabmayFT1QwyJ_AL9dDVYkoY2Y5b5pEDA&hash=9353e6ee117f66d513903f7aa039d528b720ed1765294c7738a87512a61527f6",
+        }),
+        method: "POST",
+      }
     );
-    if (isBought) {
-      ctx.answerCallbackQuery("This gift is already bought 🛒").catch((err) => {
-        console.log(err);
-      });
-    } else {
-      ctx.answerCallbackQuery("This gift is on sale 🛍").catch((err) => {
-        console.log(err);
-      });
-    }
+    response.ok &&
+      (await response
+        .json()
+        .then((res) => {
+          const { status, price: mainPrice } = res;
+          if (status == "forsale" && price == mainPrice) {
+            ctx.answerCallbackQuery("This gift is on sale 🛍").catch((err) => {
+              console.log(err);
+            });
+          } else if (status == "forsale" && price != mainPrice) {
+            ctx
+              .answerCallbackQuery(
+                "This gift is on sale but price is different 🛍"
+              )
+              .catch((err) => {
+                console.log(err);
+              });
+          } else
+            ctx
+              .answerCallbackQuery("This gift is already bought 🛒")
+              .catch((err) => {
+                console.log(err);
+              });
+        })
+        .catch((err) => {
+          console.log(err);
+          ctx.answerCallbackQuery("Error in checking gift").catch((err) => {});
+        }));
   } catch (error) {
     console.log(error);
     ctx.answerCallbackQuery("Error in checking gift").catch((err) => {});
@@ -273,6 +315,7 @@ bot.callbackQuery(/showf_[]*/, checkAdmin, async (ctx) => {
     const currentData = {
       gift_name: giftInfo[0].name,
       gift_num: giftInfo[0].gift_num,
+      id: giftInfo[0].gift_id,
       attr: {
         model: giftInfo[0].model,
         symbol: giftInfo[0].symbol,
@@ -303,7 +346,7 @@ LINK : <a href="${currentData?.gift_id}">🛒</a>`,
           )
           .text(
             "❓",
-            `isbought_${currentData?.gift_name}_${currentData?.attr?.model}_${currentData?.gift_num}_${currentData?.mainPrice}`
+            `isbought_${currentData?.gift_name}_${currentData?.attr?.model}_${currentData?.gift_num}_${currentData?.mainPrice}_${currentData?.id}`
           )
           .row(),
       }
