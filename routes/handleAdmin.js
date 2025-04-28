@@ -36,7 +36,7 @@ bot.hears(SHOW_USERS, checkEditor, async (ctx) => {
     const users = await User.findAll({
       raw: true,
     }); // Fetch all users from the database
-    let message = "List of Users:\n\n";
+    let message = `List of Users:(${users.length})\n\n`;
     users.forEach((user) => {
       message += `User ID: ${user.user_id}, Username: @${user.fullname}\n`;
     });
