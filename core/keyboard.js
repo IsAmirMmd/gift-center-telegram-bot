@@ -33,7 +33,6 @@ const clientKeyboard = new grammy.Keyboard()
   .text(FLOOR_UPDATE)
   .row()
   .text(SHOW_CAHRT)
-  .text(SHOW_CAHRT_ALL)
   .row()
   .resized();
 
