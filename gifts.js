@@ -9,6 +9,7 @@ const { getAllGifts } = require("./controllers/giftServices");
 const { getAdmins } = require("./controllers/users");
 const { authData } = require("./config/bot");
 const { getFilterByGift } = require("./controllers/filterServices");
+const { default: axios } = require("axios");
 let headersList = {
   Accept: "*/*",
   "User-Agent": "Thunder Client (https://www.thunderclient.com)",
@@ -78,14 +79,16 @@ async function fetchPage(page, gift_names = [], models = []) {
         asset: "TON",
       }),
     };
-    let response = await fetch("https://gifts2.tonnel.network/api/pageGifts", {
-      method: "POST",
-      body: JSON.stringify(bodyContent),
-      headers: headersList,
-    });
-    console.log(response && response.ok ? await response.json() : []);
+    let response = await axios.post(
+      "https://gifts2.tonnel.network/api/pageGifts",
+      bodyContent,
+      {
+        headers: headersList,
+      }
+    );
+    console.log(response.data);
 
-    return response && response.ok ? await response.json() : [];
+    return response ? response.data : [];
   } catch (error) {
     console.log("error", error);
   }
