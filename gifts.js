@@ -83,6 +83,8 @@ async function fetchPage(page, gift_names = [], models = []) {
       body: JSON.stringify(bodyContent),
       headers: headersList,
     });
+    console.log(response && response.ok ? await response.json() : []);
+
     return response && response.ok ? await response.json() : [];
   } catch (error) {
     console.log("error", error);
