@@ -111,7 +111,7 @@ async function getFloorPricesForGift(gift_name) {
     return {
       floorPrice: floorArray,
       minPrice,
-      currentPrice: floorArray.slice(-1)[0].price,
+      currentPrice: floorArray?.slice(-1)[0]?.price || 9999,
       filteredData: filteredDataFloors,
     };
   } catch (error) {
@@ -144,7 +144,7 @@ const allGiftsChart = async () => {
         if (maxLabel < res?.floorPrice?.length) {
           maxLabel = res?.floorPrice?.length;
         }
-        return (temp[gift.gift_name] = res);
+        return (temp[gift?.gift_name] = res);
       });
     });
 

@@ -370,11 +370,11 @@ bot.hears(FLOOR_PRICE, checkAdmin, async (ctx) => {
     );
 
     ctx.reply(`
-${Object.keys(sortedJson)
+${Object.keys(sortedJson || {})
   .map(
     (key, i) =>
       `${medals[i] ?? i + 1}. ${key}: ${parseFloat(
-        sortedJson[key].currentPrice
+        sortedJson[key]?.currentPrice
       ).toFixed(3)}`
   )
   .join("\n")}
@@ -391,8 +391,8 @@ bot.hears(MODELS, checkAdmin, async (ctx) => {
     const gifts = await getAllGifts();
     gifts.forEach((gift, i) => {
       i % 2
-        ? keyboard.text(gift.gift_name, `model_${gift.gift_name}`).row()
-        : keyboard.text(gift.gift_name, `model_${gift.gift_name}`);
+        ? keyboard.text(gift?.gift_name, `model_${gift?.gift_name}`).row()
+        : keyboard.text(gift?.gift_name, `model_${gift?.gift_name}`);
     });
 
     await ctx.reply("Choose a gift to check model:", {
