@@ -357,15 +357,15 @@ bot.hears(FLOOR_PRICE, checkAdmin, async (ctx) => {
     let filteredMsg = `Filtered One : `;
 
     filteredPrices
-      .sort((a, b) => b.currentPrice - a.currentPrice)
+      .sort((a, b) => b?.currentPrice - a?.currentPrice)
       .map((filtered) => {
-        filteredMsg += `\n${filtered.gift_name} - ${filtered.model} : ${filtered.currentPrice}`;
+        filteredMsg += `\n${filtered?.gift_name} - ${filtered?.model} : ${filtered?.currentPrice}`;
       });
 
     const data = floors.allData;
     let sortedJson = Object.fromEntries(
       Object.entries(data).sort(
-        ([, a], [, b]) => b.currentPrice - a.currentPrice
+        ([, a], [, b]) => b?.currentPrice - a?.currentPrice
       )
     );
 
