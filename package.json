@@ -11,5 +11,8 @@
     "grammy": "^1.35.0",
     "mysql2": "^3.13.0",
     "sequelize": "^6.37.6"
+  },
+  "devDependencies": {
+    "playwright": "^1.52.0"
   }
 }
