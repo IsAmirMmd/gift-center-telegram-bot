@@ -67,17 +67,17 @@ async function fetchPage(page, gift_names = [], models = []) {
       ref: 0,
       price_range: null,
       user_auth: "",
-        filter: JSON.stringify({
-          price: { $exists: true },
-          refunded: { $ne: true },
-          buyer: { $exists: false },
-          export_at: { $exists: true },
-          gift_name: { $in: [gift_names.map((gn) => `${gn}`).join(",")] },
-          ...(models.length > 0
-            ? { model: { $in: [models.map((m) => m).join(",")] } }
-            : {}),
-          asset: "TON",
-        }),
+      filter: JSON.stringify({
+        price: { $exists: true },
+        refunded: { $ne: true },
+        buyer: { $exists: false },
+        export_at: { $exists: true },
+        gift_name: { $in: [gift_names.map((gn) => `${gn}`).join(",")] },
+        ...(models.length > 0
+          ? { model: { $in: [models.map((m) => m).join(",")] } }
+          : {}),
+        asset: "TON",
+      }),
     };
     let response = await axios.post(
       "https://gifts2.tonnel.network/api/pageGifts",
@@ -90,7 +90,7 @@ async function fetchPage(page, gift_names = [], models = []) {
 
     return response ? response.data : [];
   } catch (error) {
-    console.log("error", error);
+    console.log("error", error.response ? error.response.status : error);
   }
 }
 
