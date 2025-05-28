@@ -1,5 +1,4 @@
 const fs = require("fs");
-const { chromium } = require("playwright");
 const { InlineKeyboard } = require("grammy");
 const {
   getFloorPrice,
@@ -10,13 +9,16 @@ const { getAllGifts } = require("./controllers/giftServices");
 const { getAdmins } = require("./controllers/users");
 const { authData } = require("./config/bot");
 const { getFilterByGift } = require("./controllers/filterServices");
+const { default: axios } = require("axios");
+let headersList = {
+  Accept: "*/*",
+  "User-Agent": "Thunder Client (https://www.thunderclient.com)",
+  "Content-Type": "application/json",
+};
 
+// ,INTERNAL_SALE
 async function saleHistory(gift, model, tag = "") {
-  const browser = await chromium.launch({ headless: true });
-  const context = await browser.newContext();
-  const page = await context.newPage();
   const url = "https://gifts2.tonnel.network/api/saleHistory";
-
   let bodyContent = {
     authData: authData,
     page: 1,
@@ -33,72 +35,62 @@ async function saleHistory(gift, model, tag = "") {
     },
   };
 
-  try {
-    const response = await page.request.post(url, {
-      headers: {
-        Accept: "*/*",
-        "User-Agent": "Mozilla/5.0",
-        "Content-Type": "application/json",
-      },
-      data: bodyContent,
-    });
-
-    const data = await response.json();
-    await browser.close();
-    return data;
-  } catch (err) {
-    console.error("saleHistory error", err);
-    await browser.close();
-    return [];
-  }
+  let response = await fetch(url, {
+    method: "POST",
+    body: JSON.stringify(bodyContent),
+    headers: headersList,
+  }).catch((err) => {
+    console.log(err);
+  });
+  return response.json();
+  const data = [
+    {
+      gift_id: 125609,
+      gift_num: 1825,
+      gift_name: "Durov's Cap",
+      price: 1000,
+      timestamp: "2025-01-22T13:18:54.170Z",
+      model: "Asterix (0.5%)",
+      symbol: "Phoenix (1%)",
+      backdrop: "Indigo Dye (2%)",
+      type: "SALE",
+    },
+  ];
 }
 
-async function fetchPage(pageNum, gift_names = [], models = []) {
-  const browser = await chromium.launch({ headless: true });
-  const context = await browser.newContext();
-  const page = await context.newPage();
-
-  const bodyContent = {
-    page: pageNum,
-    limit: 29,
-    sort: JSON.stringify({ price: 1, gift_id: -1 }),
-    ref: 0,
-    price_range: null,
-    user_auth: "",
-    filter: JSON.stringify({
-      price: { $exists: true },
-      refunded: { $ne: true },
-      buyer: { $exists: false },
-      export_at: { $exists: true },
-      gift_name: { $in: [gift_names.join(",")] },
-      ...(models.length > 0 ? { model: { $in: [models.join(",")] } } : {}),
-      asset: "TON",
-    }),
-  };
-
+async function fetchPage(page, gift_names = [], models = []) {
   try {
-    const response = await page.request.post(
+    let bodyContent = {
+      page,
+      limit: 29,
+      sort: JSON.stringify({ price: 1, gift_id: -1 }),
+      ref: 0,
+      price_range: null,
+      user_auth: "",
+        filter: JSON.stringify({
+          price: { $exists: true },
+          refunded: { $ne: true },
+          buyer: { $exists: false },
+          export_at: { $exists: true },
+          gift_name: { $in: [gift_names.map((gn) => `${gn}`).join(",")] },
+          ...(models.length > 0
+            ? { model: { $in: [models.map((m) => m).join(",")] } }
+            : {}),
+          asset: "TON",
+        }),
+    };
+    let response = await axios.post(
       "https://gifts2.tonnel.network/api/pageGifts",
+      bodyContent,
       {
-        headers: {
-          "content-type": "application/json",
-          "user-agent":
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-          origin: "https://marketplace.tonnel.network",
-          referer: "https://marketplace.tonnel.network/",
-          accept: "*/*",
-        },
-        data: bodyContent,
+        headers: headersList,
       }
     );
+    console.log(response.data);
 
-    const data = await response.json();
-    await browser.close();
-    return data;
-  } catch (err) {
-    console.error("fetchPage error", err);
-    await browser.close();
-    return [];
+    return response ? response.data : [];
+  } catch (error) {
+    console.log("error", error);
   }
 }
 
@@ -112,7 +104,11 @@ async function fetchAllPages(
   try {
     let allData = [];
     for (let page = 1; page <= 5; page++) {
-      const data = await fetchPage(page, [gift_name], model ? [model] : []);
+      const data = await fetchPage(
+        page,
+        [gift_name],
+        model ? [model] : []
+      ).catch((err) => {});
       if ((data || [])?.length > 0)
         allData = allData.concat(
           data.map((gift) => ({
@@ -174,20 +170,16 @@ async function fetchAllPages(
           await ctx
             .sendMessage(
               admin.user_id,
-              `⚠️🚨\nPrice : ${currentData?.price.toFixed(
-                3
-              )} - ${percentage.toFixed(
-                3
-              )}% 💎\nPrevPrice : ${latestPrice?.toFixed(
-                3
-              )} ⬛\n#${currentData?.attr?.model
-                .trim()
-                .split(" ")
-                .join("_")}\nGIFT : <a href="${
-                currentData?.link
-              }">NFT</a>\nLINK : <a href="${
-                currentData?.gift_id
-              }">🛒</a>\n⚠️🚨`,
+              `⚠️🚨
+Price : ${currentData?.price.toFixed(3)} - ${(
+                (1 - currentData?.price / latestPrice) *
+                100
+              ).toFixed(3)}% 💎
+PrevPrice : ${latestPrice?.toFixed(3)} ⬛️
+#${currentData?.attr?.model.trim().split(" ").join("_")}
+GIFT : <a href="${currentData?.link}">NFT</a>
+LINK : <a href="${currentData?.gift_id}">🛒</a>
+⚠️🚨`,
               {
                 parse_mode: "HTML",
                 reply_markup: new InlineKeyboard()
@@ -213,7 +205,7 @@ async function fetchAllPages(
 
 const getAllData = async (ctx, forAlert = false) => {
   const gifts = await getAllGifts();
-  for (const { gift_name, checkFloor, fullCompare } of gifts) {
+  gifts.map(async ({ gift_name, checkFloor, fullCompare }) => {
     await fetchAllPages(
       gift_name,
       ctx,
@@ -222,7 +214,7 @@ const getAllData = async (ctx, forAlert = false) => {
       fullCompare
     ).catch((er) => console.error(er));
     await new Promise((resolve) => setTimeout(resolve, 550));
-  }
+  });
 };
 
 module.exports = { fetchAllPages, getAllData, fetchPage, saleHistory };
