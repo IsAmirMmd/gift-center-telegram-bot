@@ -55,6 +55,23 @@ async function getAdmins() {
   }
 }
 
+async function updateBalance(user_id, amount) {
+  try {
+    const user = await User.findOne({
+      where: { user_id },
+    });
+    if (!user) {
+      throw new Error("User not found");
+    }
+    user.balance = (user.balance || 0) + amount;
+    await user.save();
+    return user;
+  } catch (error) {
+    console.error("Error updating balance:", error);
+    throw error;
+  }
+}
+
 async function isEditor(user_id) {
   try {
     const user = await User.findOne({
@@ -84,4 +101,5 @@ module.exports = {
   getAdmins,
   demoteAdmin,
   isEditor,
+  updateBalance,
 };

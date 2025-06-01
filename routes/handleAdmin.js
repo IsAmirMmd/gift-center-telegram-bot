@@ -19,6 +19,8 @@ async function checkEditor(ctx, next) {
   try {
     const user = await getUser(ctx.chat.id);
     if (user && user.admin && user.role === "EDITOR") {
+      await updateStatus(ctx.chat.id, "START").catch(() => {});
+
       return next();
     } else {
       ctx

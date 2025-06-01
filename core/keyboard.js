@@ -16,31 +16,58 @@ const {
   FLOOR_COMPARE,
   FILTERS,
   REVOKE_ACCESS,
+  CHECK_NEW_GIFTS,
+  DEPOSIT,
+  MY_ACCOUNT,
 } = require("./actions");
 
 const clientKeyboard = new grammy.Keyboard()
-  .text(SMART_FILTER)
-  .text(FILTERS.SEARCH)
+  .text(MY_ACCOUNT)
   .row()
-  .text(SHOW_GIFTS)
-  .text(NEW_GIFT_SERIES)
-  .text(REMOVE_GIFT)
-  .row()
-  .text(MODELS)
-  .text(FLOOR_PRICE)
-  .row()
-  .text(FLOOR_COMPARE)
-  .text(FLOOR_UPDATE)
-  .row()
-  .text(SHOW_CAHRT)
-  .row()
-  .resized();
+  // .text(SMART_FILTER)
+  // .text(FILTERS.SEARCH)
+  // .row()
+  // .text(SHOW_GIFTS)
+  // .text(NEW_GIFT_SERIES)
+  // .text(REMOVE_GIFT)
+  // .row()
+  // .text(MODELS)
+  // .text(FLOOR_PRICE)
+  // .row()
+  // .text(FLOOR_COMPARE)
+  // .text(FLOOR_UPDATE)
+  // .row()
+  // .text(SHOW_CAHRT)
+  // .row()
+  .text(DEPOSIT)
+  .text(CHECK_NEW_GIFTS)
+  .row();
 
-const adminKeyboard = clientKeyboard
+const adminKeyboard = new grammy.Keyboard()
+  .text(MY_ACCOUNT)
+  .row()
+  // .text(SMART_FILTER)
+  // .text(FILTERS.SEARCH)
+  // .row()
+  // .text(SHOW_GIFTS)
+  // .text(NEW_GIFT_SERIES)
+  // .text(REMOVE_GIFT)
+  // .row()
+  // .text(MODELS)
+  // .text(FLOOR_PRICE)
+  // .row()
+  // .text(FLOOR_COMPARE)
+  // .text(FLOOR_UPDATE)
+  // .row()
+  // .text(SHOW_CAHRT)
+  // .row()
+  .text(DEPOSIT)
+  .text(CHECK_NEW_GIFTS)
+  .row()
   .text("- - - - - - - - - - -")
   .row()
   .text(SHOW_USERS)
   .text(REVOKE_ACCESS)
-  .row();
+  .resized();
 
 module.exports = { clientKeyboard, adminKeyboard };

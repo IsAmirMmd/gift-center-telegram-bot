@@ -25,6 +25,12 @@ const User = sequelize.define("User", {
     allowNull: true,
     defaultValue: "VIEWER",
   },
+  balance: {
+    type: DataTypes.FLOAT,
+    allowNull: true,
+    defaultValue: 0.0,
+  },
 });
 
 module.exports = User;
+// User.sync({ alter: true });

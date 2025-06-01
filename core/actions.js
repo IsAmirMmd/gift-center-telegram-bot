@@ -1,4 +1,5 @@
 const actions = {
+  MY_ACCOUNT: "👤 My Account",
   SHOW_CATEGORIES: "📂 Show Categories",
   SHOW_CAHRT: "📊 Show Chart",
   SHOW_CAHRT_ALL: "📈 Show All Chart",
@@ -23,6 +24,9 @@ const actions = {
   SHOW_USERS: "👤 Show Users",
   REMOVE_GIFT: "❌ Remove Gift",
   REVOKE_ACCESS: "🔒 Revoke Access",
+
+  CHECK_NEW_GIFTS: "🎁 Available Gifts",
+  DEPOSIT: "💸 Deposit Stars",
 };
 
 module.exports = {

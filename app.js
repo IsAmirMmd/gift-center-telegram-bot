@@ -13,7 +13,7 @@ const {
   FLOOR_PRICE,
   MODELS,
 } = require("./core/actions");
-const { clientKeyboard } = require("./core/keyboard");
+const { clientKeyboard, adminKeyboard } = require("./core/keyboard");
 const { createChart } = require("./controllers/imageChart");
 const {
   getFloorPricesForGift,
@@ -22,7 +22,13 @@ const {
   getFloorPriceByModel,
 } = require("./controllers/floorPrices");
 const Gift = require("./models/gift");
-const { newUser, updateStatus, getUser } = require("./controllers/users");
+const {
+  newUser,
+  updateStatus,
+  getUser,
+  getAdmins,
+  updateBalance,
+} = require("./controllers/users");
 const {
   getAllGifts,
   getGiftsModel,
@@ -36,12 +42,16 @@ const {
   getAllFilteredData,
 } = require("./controllers/filterServices");
 const User = require("./models/user");
+const {
+  getAllGiftsBuyable,
+  newGiftNameBuyable,
+} = require("./controllers/buyableGiftServices");
 
 const bot = new Bot(TOKEN);
 bot.api
   .setMyCommands([
     { command: "start", description: "start" },
-    { command: "search", description: "search by model" },
+    // { command: "search", description: "search by model" },
   ])
   .catch((err) => {});
 
@@ -77,9 +87,11 @@ bot.hears(SHOW_GIFTS, checkAdmin, async (ctx) => {
         ? keyboard.text(gift.gift_name, `0_giftl_${gift.gift_name}`).row()
         : keyboard.text(gift.gift_name, `0_giftl_${gift.gift_name}`);
     });
-    await ctx.reply("Choose a gift:", {
-      reply_markup: keyboard,
-    });
+    await ctx
+      .reply("Choose a gift:", {
+        reply_markup: keyboard,
+      })
+      .catch(() => {});
   } catch (error) {
     ctx.reply(JSON.stringify(error, null, 2));
   }
@@ -107,8 +119,9 @@ bot.callbackQuery(/[0-9]*_giftl_[^]*/, async (ctx) => {
       const d = jsonData.data[i];
       await new Promise((resolve) => setTimeout(resolve, 550)); // Delay for 3 seconds
 
-      await ctx.reply(
-        `
+      await ctx
+        .reply(
+          `
 #${d.gift_num}
 NFT : <a href="${d.link}">nft</a>
 BUY : <a href="${d.gift_id}">🛒</a>
@@ -117,17 +130,18 @@ TON : ${parseFloat(d.price).toFixed(4)} 💎
 ${Object.keys(d.attr)
   .map((key) => `${key} : ${d.attr[key]}`)
   .join("\n")}`,
-        {
-          parse_mode: "HTML",
-          reply_markup:
-            i % 10 === 9 || i === jsonData.data.length - 1
-              ? new InlineKeyboard().text(
-                  `Continue To ${parseInt(startPageNumber) + 1}`,
-                  `${parseInt(startPageNumber) + 1}_giftl_${gift}`
-                )
-              : undefined,
-        }
-      );
+          {
+            parse_mode: "HTML",
+            reply_markup:
+              i % 10 === 9 || i === jsonData.data.length - 1
+                ? new InlineKeyboard().text(
+                    `Continue To ${parseInt(startPageNumber) + 1}`,
+                    `${parseInt(startPageNumber) + 1}_giftl_${gift}`
+                  )
+                : undefined,
+          }
+        )
+        .catch(() => {});
     }
   } catch (err) {
     console.error("Error:", err);
@@ -327,15 +341,23 @@ bot.hears(SHOW_CAHRT_ALL, checkAdmin, async (ctx) => {
 
 bot.command("start", async (ctx) => {
   try {
-    if (!(await getUser(ctx.chat.id)))
-      await newUser(
+    let user = {
+      role: "VIEWER",
+    };
+    if (!(user = await getUser(ctx.chat.id)))
+      user = await newUser(
         ctx.chat.id,
         ctx.chat.username ?? ctx.chat.first_name,
         "START"
       ).catch((err) => console.log("Not Valid"));
-    ctx.reply("Procces started !", {
-      reply_markup: clientKeyboard,
-    });
+
+    ctx
+      .reply("Procces started !", {
+        reply_markup: user.role === "VIEWER" ? clientKeyboard : adminKeyboard,
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   } catch (error) {}
 });
 
@@ -369,7 +391,9 @@ bot.hears(FLOOR_PRICE, checkAdmin, async (ctx) => {
       )
     );
 
-    ctx.reply(`
+    ctx
+      .reply(
+        `
 ${Object.keys(sortedJson || {})
   .map(
     (key, i) =>
@@ -379,7 +403,9 @@ ${Object.keys(sortedJson || {})
   )
   .join("\n")}
     
-${filteredMsg}`);
+${filteredMsg}`
+      )
+      .catch(() => {});
   } catch (err) {
     console.error("Error:", err);
   }
@@ -395,9 +421,11 @@ bot.hears(MODELS, checkAdmin, async (ctx) => {
         : keyboard.text(gift?.gift_name, `model_${gift?.gift_name}`);
     });
 
-    await ctx.reply("Choose a gift to check model:", {
-      reply_markup: keyboard,
-    });
+    await ctx
+      .reply("Choose a gift to check model:", {
+        reply_markup: keyboard,
+      })
+      .catch(() => {});
   } catch (error) {
     ctx.reply(JSON.stringify(error, null, 2));
   }
@@ -408,7 +436,7 @@ bot.callbackQuery(/model_[]*/, async (ctx) => {
     const gift = ctx.callbackQuery.data.split("_")[1];
     const gift_meta = await getGiftsModel(gift);
     const allModelsOfGift = gift_meta.gift_models.split("*").join("\n");
-    ctx.reply(allModelsOfGift);
+    ctx.reply(allModelsOfGift).catch(() => {});
   } catch (error) {
     console.log(error);
   }
@@ -446,7 +474,8 @@ bot.command("search", checkAdmin, async (ctx) => {
       });
     });
 
-    await ctx.reply(`searching for ${gift_model} . . . `);
+    await ctx.reply(`searching for ${gift_model} . . . `).catch(() => {});
+
     if (preferes.length == 0) return await ctx.reply("No Data Found !");
 
     preferes.forEach(async (pref) => {
@@ -488,18 +517,20 @@ GIFT: <a href="https://t.me/nft/${gift_name
 LINK: <a href="${`https://t.me/tonnel_network_bot/gift?startapp=${foundNFT[0].gift_id}`}">🛒</a>
 ⚠️🚨`;
 
-      ctx.reply(list, {
-        parse_mode: "HTML",
-        reply_markup: new InlineKeyboard()
-          .text(
-            "Add To Filters",
-            `filter_${gift_name}_${model}_${(
-              Number(foundNFT[0].price) * 1.1
-            ).toFixed(3)}`
-          )
-          .row()
-          .text("Show Others", `0_giftl_${gift_name}`),
-      });
+      ctx
+        .reply(list, {
+          parse_mode: "HTML",
+          reply_markup: new InlineKeyboard()
+            .text(
+              "Add To Filters",
+              `filter_${gift_name}_${model}_${(
+                Number(foundNFT[0].price) * 1.1
+              ).toFixed(3)}`
+            )
+            .row()
+            .text("Show Others", `0_giftl_${gift_name}`),
+        })
+        .catch(() => {});
     });
   } catch (error) {
     console.log(error);
@@ -511,9 +542,13 @@ bot.callbackQuery(/filter_[]*/, async (ctx) => {
     const [cm, gift_name, model, price] = ctx.callbackQuery.data.split("_");
     await createOrUpdateFloorPrice(gift_name, price, model);
     await addAlert(gift_name, model);
-    ctx.reply(`New Filter Added ${gift_name} - ${model} : ${price}`);
+    ctx
+      .reply(`New Filter Added ${gift_name} - ${model} : ${price}`)
+
+      .catch(() => {});
   } catch (error) {
-    ctx.reply("Error In Adding new filter !");
+    ctx.reply("Error In Adding new filter !").catch(() => {});
+
     console.log(error);
   }
 });
@@ -531,12 +566,77 @@ bot.start().then(() => {
   console.log("Connected successfully");
 });
 
+bot.callbackQuery(/buyforme_[]*/, async (ctx) => {
+  try {
+    const [cm, gift_id, price] = ctx.callbackQuery.data.split("_");
+
+    const user = await getUser(ctx.chat.id);
+    if (user.balance < price) {
+      return ctx
+        .reply(
+          `You don't have enough balance to buy this gift. Your balance: ${user.balance} STAR, required: ${price} STAR`
+        )
+        .catch(() => {});
+    }
+
+    await bot.api.raw["sendGift"]({
+      user_id: ctx.chat.id,
+      gift_id,
+      text: "Auto @GiftFinderFullDataBOT ⭐️ by @isAmirMmd 🐘",
+    })
+      .then(async (res) => {
+        await updateBalance(ctx.chat.id, -price);
+      })
+      .catch((error) => {
+        console.error("Error sending gift:", error);
+        ctx
+          .reply("Error in sending gift : " + error.description)
+          .catch(() => {});
+      });
+  } catch (error) {
+    console.error("Error fetching gifts:", error);
+  }
+});
+
 setInterval(async () => {
   try {
-    await getAllData(bot.api, true);
-    const filters = await getAllFilteredData();
-    filters.map(async (f) => {
-      await fetchAllPages(f.gifts, bot.api, true, f.models);
+    const { gifts } = await bot.api.raw["getAvailableGifts"]();
+    const db_gifts = await getAllGiftsBuyable();
+
+    gifts.map(async (gift) => {
+      const existingGift = db_gifts.find(
+        (dbGift) => dbGift.gift_name === gift.id
+      );
+
+      if (!existingGift) {
+        await newGiftNameBuyable(gift.id).catch((err) => {
+          console.log(err);
+        });
+
+        for (const admin of await getAdmins()) {
+          await bot.api
+            .sendMessage(
+              admin.user_id,
+              `A new gift has been found: ${gift.id}\nCost: ${
+                gift.star_count
+              } ⭐️
+Emoji: ${gift.sticker?.emoji}
+${gift.upgrade_star_count ? `Upgrade cost: ${gift.upgrade_star_count} ⭐️` : ""}
+      ${
+        gift.remaining_count && gift.total_count
+          ? ` ${gift.remaining_count} out of ${gift.total_count} remaining`
+          : ""
+      }`,
+              {
+                reply_markup: new InlineKeyboard().text(
+                  "Purchase",
+                  `buyforme_${gift.id}_${gift.star_count}`
+                ),
+              }
+            )
+            .catch((err) => console.log(err));
+        }
+      }
     });
   } catch (err) {
     console.error("Error fetching data:", err);

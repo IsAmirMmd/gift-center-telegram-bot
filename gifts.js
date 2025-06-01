@@ -86,12 +86,8 @@ async function fetchPage(page, gift_names = [], models = []) {
         headers: headersList,
       }
     );
-    console.log(response.data);
-
     return response ? response.data : [];
-  } catch (error) {
-    console.log("error", error.response ? error.response.status : error);
-  }
+  } catch (error) {}
 }
 
 async function fetchAllPages(

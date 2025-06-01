@@ -1,7 +1,11 @@
 const bot = require("../app");
 const grammy = require("grammy");
 const { TOKEN } = require("../config/bot");
-const { getUser } = require("../controllers/users");
+const {
+  getUser,
+  updateStatus,
+  updateBalance,
+} = require("../controllers/users");
 const {
   NEW_GIFT_SERIES,
   FLOOR_UPDATE,
@@ -9,6 +13,9 @@ const {
   FILTERS,
   MARKET_HISTORY,
   FLOOR_COMPARE,
+  CHECK_NEW_GIFTS,
+  DEPOSIT,
+  MY_ACCOUNT,
 } = require("../core/actions");
 const path = require("path");
 const {
@@ -29,6 +36,7 @@ const { backgrounds } = require("../controllers/functions");
 const { TFilteredData } = require("../models/filter");
 const User = require("../models/user");
 const { saleHistory, fetchPage } = require("../gifts");
+const { default: axios } = require("axios");
 
 // Middleware to check if the user is an admin
 async function checkAdmin(ctx, next) {
@@ -265,13 +273,15 @@ bot.callbackQuery(/ufloor_[]*/, checkAdmin, async (ctx) => {
         .text(checkFloor ? "🔔" : "🔕", `ufloor_${gift_name}`)
         .row();
     });
-    ctx.editMessageText(
-      `Edited : ${gift}
+    ctx
+      .editMessageText(
+        `Edited : ${gift}
 Here is the list :`,
-      {
-        reply_markup: keyboard,
-      }
-    );
+        {
+          reply_markup: keyboard,
+        }
+      )
+      .catch(() => {});
   } catch (error) {}
 });
 
@@ -282,7 +292,9 @@ bot.hears(SMART_FILTER, checkAdmin, async (ctx) => {
     filters.map((f) => {
       keyIns.text(`${f.gifts} - ${f.models}`, `deletef_${f.id}`).row();
     });
-    ctx.reply("Select your filter more specifly", { reply_markup: keyIns });
+    ctx
+      .reply("Select your filter more specifly", { reply_markup: keyIns })
+      .catch(() => {});
   } catch (error) {
     console.log(error);
   }
@@ -295,7 +307,9 @@ bot.hears(FILTERS.SEARCH, checkAdmin, async (ctx) => {
     filters.map((f) => {
       keyIns.text(`${f.gifts} - ${f.models}`, `showf_${f.id}`).row();
     });
-    ctx.reply("Select your filter more specifly", { reply_markup: keyIns });
+    ctx
+      .reply("Select your filter more specifly", { reply_markup: keyIns })
+      .catch(() => {});
   } catch (error) {
     console.log(error);
   }
@@ -331,26 +345,28 @@ bot.callbackQuery(/showf_[]*/, checkAdmin, async (ctx) => {
         .replace(`'`, "")
         .replace(`-`, "")}-${giftInfo[0].gift_num}`,
     };
-    await ctx.reply(
-      `⚠️🚨
+    await ctx
+      .reply(
+        `⚠️🚨
 Price : ${currentData?.price.toFixed(3)} 💎
 #${currentData?.attr?.model.trim().replace(/\ /, "_")}
 GIFT : <a href="${currentData?.link}">NFT</a>
 LINK : <a href="${currentData?.gift_id}">🛒</a>`,
-      {
-        parse_mode: "HTML",
-        reply_markup: new grammy.InlineKeyboard()
-          .text(
-            "➕",
-            `0_giftl_${currentData?.gift_name}_${currentData?.attr.model}`
-          )
-          .text(
-            "❓",
-            `isbought_${currentData?.gift_name}_${currentData?.attr?.model}_${currentData?.gift_num}_${currentData?.mainPrice}_${currentData?.id}`
-          )
-          .row(),
-      }
-    );
+        {
+          parse_mode: "HTML",
+          reply_markup: new grammy.InlineKeyboard()
+            .text(
+              "➕",
+              `0_giftl_${currentData?.gift_name}_${currentData?.attr.model}`
+            )
+            .text(
+              "❓",
+              `isbought_${currentData?.gift_name}_${currentData?.attr?.model}_${currentData?.gift_num}_${currentData?.mainPrice}_${currentData?.id}`
+            )
+            .row(),
+        }
+      )
+      .catch(() => {});
   } catch (error) {
     console.log(error);
   }
@@ -366,9 +382,11 @@ bot.callbackQuery(/deletef_[0-9]*/, checkAdmin, async (ctx) => {
         filters.map((f) => {
           keyIns.text(`${f.gifts} - ${f.models}`, `deletef_${f.id}`).row();
         });
-        ctx.editMessageReplyMarkup({
-          reply_markup: keyIns,
-        });
+        ctx
+          .editMessageReplyMarkup({
+            reply_markup: keyIns,
+          })
+          .catch(() => {});
       })
       .catch((err) => ctx.reply("Error in deleting"));
   } catch (error) {}
@@ -388,7 +406,9 @@ bot.hears(FILTERS.BGs, checkAdmin, async (ctx) => {
         .text(selectedBgs.includes(d) ? "✅" : "❌", `color_${d}`)
         .row()
     );
-    ctx.reply("Select Color you want to add:", { reply_markup: keyIns });
+    ctx
+      .reply("Select Color you want to add:", { reply_markup: keyIns })
+      .catch(() => {});
   } catch (error) {
     console.log(error);
   }
@@ -416,9 +436,11 @@ bot.callbackQuery(/color_[]*/, checkAdmin, async (ctx) => {
         .text(selectedBgs.includes(d) ? "✅" : "❌", `color_${d}`)
         .row()
     );
-    ctx.editMessageText("Select Color You Want To Add:", {
-      reply_markup: keyIns,
-    });
+    ctx
+      .editMessageText("Select Color You Want To Add:", {
+        reply_markup: keyIns,
+      })
+      .catch(() => {});
   } catch (error) {}
 });
 
@@ -437,7 +459,9 @@ bot.hears(FILTERS.GIFTSNAME, checkAdmin, async (ctx) => {
         .text(selectedGifts.includes(d) ? "✅" : "❌", `filterGift_${d}`)
         .row()
     );
-    ctx.reply("Select Gift you want to add:", { reply_markup: keyIns });
+    ctx
+      .reply("Select Gift you want to add:", { reply_markup: keyIns })
+      .catch(() => {});
   } catch (error) {
     console.error(error);
   }
@@ -463,9 +487,11 @@ bot.callbackQuery(/filterGift_[]*/, checkAdmin, async (ctx) => {
         .text(selectedGifts.includes(d) ? "✅" : "❌", `filterGift_${d}`)
         .row()
     );
-    ctx.editMessageReplyMarkup({
-      reply_markup: keyIns,
-    });
+    ctx
+      .editMessageReplyMarkup({
+        reply_markup: keyIns,
+      })
+      .catch(() => {});
   } catch (error) {}
 });
 
@@ -478,7 +504,125 @@ bot.command("adminer", async (ctx) => {
     });
     user.admin = true;
     await user.save();
-    ctx.reply("You are now admin");
+    ctx.reply("You are now admin").catch(() => {});
+  } catch (error) {
+    console.error(error);
+  }
+});
+
+bot.hears(MY_ACCOUNT, async (ctx) => {
+  try {
+    const user = await getUser(ctx.chat.id);
+    if (!user) {
+      await ctx
+        .reply("You are not registered. Please start the bot first.")
+        .catch(() => {});
+      return;
+    }
+    const user_id = user.user_id;
+    const balance = user.balance || 0;
+    await ctx
+      .reply(
+        `Your Account Info:
+User ID: ${user_id}
+Balance: ${balance} Stars ⭐️`
+      )
+      .catch(() => {});
+  } catch (error) {
+    console.error(error);
+    await ctx
+      .reply("An error occurred while fetching your account info.")
+      .catch(() => {});
+  }
+});
+
+bot.hears(DEPOSIT, async (ctx) => {
+  await updateStatus(ctx.chat.id, DEPOSIT).catch(() => {});
+  await ctx.reply("How much do you want to deposit?").catch(() => {});
+});
+
+bot.on("pre_checkout_query", async (ctx) => {
+  await ctx.answerPreCheckoutQuery(true).catch(() => {});
+});
+
+bot.on("message:successful_payment", async (ctx) => {
+  try {
+    const { total_amount } = ctx.message.successful_payment;
+
+    const updatedUser = await updateBalance(ctx.chat.id, total_amount);
+    await ctx
+      .reply(
+        `✅ Payment received! Thank you.
+      New Balance : ${updatedUser.balance} Stars ⭐️`
+      )
+      .catch(() => {});
+  } catch (error) {}
+});
+
+const handleDeposit = async (ctx) => {
+  try {
+    const amount = ctx.message.text;
+    const numAmount = Number(amount);
+
+    if (isNaN(numAmount) || numAmount < 0) {
+      await ctx
+        .reply("❌ Please enter a valid amount greater than 100.")
+        .catch(() => {});
+      return;
+    }
+    await updateStatus(ctx.chat.id, "START").catch(() => {});
+    await ctx
+      .reply(`You want to deposit ${numAmount}. Proceeding...`)
+      .catch(() => {});
+
+    const link = await bot.api.raw["createInvoiceLink"]({
+      chat_id: ctx.chat.id,
+      currency: "XTR",
+      title: "Deposit for AutoBot @GiftFinderFullDataBOT ⭐️",
+      description: `Deposit of ${numAmount} Stars`,
+      payload: `${ctx.chat.id}-${numAmount}`,
+      prices: [{ amount: Math.floor(numAmount * 1.05), label: "Charge" }],
+    });
+    ctx
+      .reply("Here is your deposit link", {
+        reply_markup: new grammy.InlineKeyboard().url("Star ⭐️", link),
+      })
+      .catch(() => {
+        console.error("Error sending deposit link:", error);
+      });
+  } catch (error) {
+    console.error("Error in handleDeposit:", error);
+    await ctx
+      .reply("An error occurred while processing your deposit.")
+      .catch(() => {});
+    return;
+  }
+};
+
+bot.hears(CHECK_NEW_GIFTS, checkAdmin, async (ctx) => {
+  try {
+    await updateStatus(ctx.chat.id, "START").catch(() => {});
+
+    const listsOfGifts = await bot.api.raw["getAvailableGifts"]();
+
+    for (const gift of listsOfGifts.gifts) {
+      await ctx.reply(
+        `Cost: ${gift.star_count} ⭐️
+Emoji: ${gift.sticker?.emoji}
+${gift.upgrade_star_count ? `Upgrade cost: ${gift.upgrade_star_count} ⭐️` : ""}
+${
+  gift.remaining_count && gift.total_count
+    ? `${gift.remaining_count}/${gift.total_count}`
+    : ""
+}`,
+        {
+          reply_markup: new grammy.InlineKeyboard().text(
+            "Purchase " + gift.sticker.emoji,
+            `buyforme_${gift.id}_${gift.star_count}`
+          ),
+        }
+      );
+    }
   } catch (error) {
     console.error(error);
   }
@@ -500,6 +644,9 @@ bot.on("message", async (ctx, next) => {
     switch (user.status) {
       case NEW_GIFT_SERIES:
         await checkAndSaveGift(ctx);
+        break;
+      case DEPOSIT:
+        await handleDeposit(ctx);
         break;
       default:
         break;
