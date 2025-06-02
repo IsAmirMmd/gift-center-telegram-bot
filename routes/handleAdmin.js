@@ -37,7 +37,7 @@ async function checkEditor(ctx, next) {
 
 bot.hears(ALL_CONFIG, checkEditor, async (ctx) => {
   try {
-    const pageSize = 5;
+    const pageSize = 10;
     const page = ctx.session?.configPage || 1;
     const totalConfigs = await AutoPurchase.count();
     const totalPages = Math.ceil(totalConfigs / pageSize);
@@ -57,10 +57,8 @@ bot.hears(ALL_CONFIG, checkEditor, async (ctx) => {
     configs.forEach((conf, idx) => {
       message += `#${(page - 1) * pageSize + idx + 1}\n`;
       message += `User ID: ${conf.user_id}\n`;
-      message += `Min Price: ${conf.minPrice}\n`;
-      message += `Max Price: ${conf.maxPrice}\n`;
-      message += `Max Supply: ${conf.maxSupply}\n`;
-      message += `Quantity: ${conf.quantity}\n`;
+      message += `${conf.minPrice}-${conf.maxPrice}\n`;
+      message += `MS : ${conf.maxSupply} - Q : ${conf.quantity}\n`;
       message += `Active: ${conf.isActive ? "Yes" : "No"}\n`;
       message += `----------------------\n`;
     });

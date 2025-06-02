@@ -574,11 +574,12 @@ bot.callbackQuery(/buyforme_[]*/, async (ctx) => {
     const user = await getUser(ctx.chat.id);
     if (user.balance < price) {
       return ctx
-        .reply(
+        .editMessageText(
           `You don't have enough balance to buy this gift. Your balance: ${user.balance} STAR, required: ${price} STAR`
         )
         .catch(() => {});
     }
+    ctx.editMessageText("Sending gift...").catch(() => {});
 
     await bot.api.raw["sendGift"]({
       user_id: ctx.chat.id,
