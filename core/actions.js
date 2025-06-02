@@ -28,6 +28,7 @@ const actions = {
 
   CHECK_NEW_GIFTS: "🎁 Available Gifts",
   DEPOSIT: "💸 Deposit Stars",
+  ALL_CONFIG: "⚙️ All Configs",
 };
 
 module.exports = {

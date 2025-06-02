@@ -12,8 +12,10 @@ const {
   REMOVE_GIFT,
   NEW_GIFT_SERIES,
   REVOKE_ACCESS,
+  ALL_CONFIG,
 } = require("../core/actions");
 const User = require("../models/user");
+const AutoPurchase = require("../models/auto_purchase");
 
 async function checkEditor(ctx, next) {
   try {
@@ -32,6 +34,62 @@ async function checkEditor(ctx, next) {
     ctx.reply("An error occurred while checking admin status.").catch(() => {});
   }
 }
+
+bot.hears(ALL_CONFIG, checkEditor, async (ctx) => {
+  try {
+    const pageSize = 5;
+    const page = ctx.session?.configPage || 1;
+    const totalConfigs = await AutoPurchase.count();
+    const totalPages = Math.ceil(totalConfigs / pageSize);
+
+    const configs = await AutoPurchase.findAll({
+      offset: (page - 1) * pageSize,
+      limit: pageSize,
+      order: [["id", "ASC"]],
+      raw: true,
+    });
+
+    if (!configs.length) {
+      return ctx.reply("No auto-purchase configs found.");
+    }
+
+    let message = `Auto-Purchase Configs (Page ${page}/${totalPages}):\n\n`;
+    configs.forEach((conf, idx) => {
+      message += `#${(page - 1) * pageSize + idx + 1}\n`;
+      message += `User ID: ${conf.user_id}\n`;
+      message += `Min Price: ${conf.minPrice}\n`;
+      message += `Max Price: ${conf.maxPrice}\n`;
+      message += `Max Supply: ${conf.maxSupply}\n`;
+      message += `Quantity: ${conf.quantity}\n`;
+      message += `Active: ${conf.isActive ? "Yes" : "No"}\n`;
+      message += `----------------------\n`;
+    });
+
+    const keyboard = new InlineKeyboard();
+    if (page > 1) keyboard.text("⬅️ Prev", "config_prev");
+    if (page < totalPages) keyboard.text("Next ➡️", "config_next");
+
+    await ctx.reply(message, { reply_markup: keyboard });
+    ctx.session = ctx.session || {};
+    ctx.session.configPage = page;
+  } catch (error) {
+    console.error("Error fetching configs:", error);
+    ctx.reply("An error occurred while fetching configs.");
+  }
+});
+
+bot.callbackQuery("config_prev", checkEditor, async (ctx) => {
+  ctx.session = ctx.session || {};
+  ctx.session.configPage = Math.max(1, (ctx.session.configPage || 1) - 1);
+  await ctx.deleteMessage().catch(() => {});
+  await bot.handleUpdate(ctx.update); // re-trigger hears
+});
+bot.callbackQuery("config_next", checkEditor, async (ctx) => {
+  ctx.session = ctx.session || {};
+  ctx.session.configPage = (ctx.session.configPage || 1) + 1;
+  await ctx.deleteMessage().catch(() => {});
+  await bot.handleUpdate(ctx.update); // re-trigger hears
+});
 
 bot.hears(SHOW_USERS, checkEditor, async (ctx) => {
   try {

@@ -20,6 +20,7 @@ const {
   DEPOSIT,
   MY_ACCOUNT,
   AUTO_PURCHASE_CONFIG,
+  ALL_CONFIG,
 } = require("./actions");
 
 const clientKeyboard = new grammy.Keyboard()
@@ -70,6 +71,8 @@ const adminKeyboard = new grammy.Keyboard()
   .text("- - - - - - - - - - -")
   .row()
   .text(SHOW_USERS)
+  .text(ALL_CONFIG)
+  .row()
   .text(REVOKE_ACCESS)
   .resized();
 

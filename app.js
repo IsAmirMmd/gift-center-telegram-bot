@@ -617,7 +617,7 @@ setInterval(async () => {
         const allAutoPurchases = await getAllAutoPurchases({
           minPrice: { [Op.lte]: gift.star_count },
           maxPrice: { [Op.gte]: gift.star_count },
-          maxSupply: { [Op.gt]: gift.total_count },
+          maxSupply: { [Op.gte]: gift.total_count },
           isActive: true,
         });
         for (const autoPurchase of allAutoPurchases) {
@@ -642,23 +642,23 @@ setInterval(async () => {
   }
 }, 12 * 1000);
 
-setInterval(async () => {
-  try {
-    const threeDaysAgo = new Date();
-    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+// setInterval(async () => {
+//   try {
+//     const threeDaysAgo = new Date();
+//     threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
 
-    await FloorPrice.destroy({
-      where: {
-        createdAt: {
-          [Op.lt]: threeDaysAgo,
-        },
-      },
-    });
-    console.log("Old floor prices removed successfully");
-  } catch (err) {
-    console.error("Error removing old floor prices:", err);
-  }
-}, 8 * 60 * 60 * 1000);
+//     await FloorPrice.destroy({
+//       where: {
+//         createdAt: {
+//           [Op.lt]: threeDaysAgo,
+//         },
+//       },
+//     });
+//     console.log("Old floor prices removed successfully");
+//   } catch (err) {
+//     console.error("Error removing old floor prices:", err);
+//   }
+// }, 8 * 60 * 60 * 1000);
 
 async function setUpListener(ctx, next) {
   if (!ctx) return;
