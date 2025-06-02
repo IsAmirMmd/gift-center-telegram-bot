@@ -19,6 +19,7 @@ const {
   CHECK_NEW_GIFTS,
   DEPOSIT,
   MY_ACCOUNT,
+  AUTO_PURCHASE_CONFIG,
 } = require("./actions");
 
 const clientKeyboard = new grammy.Keyboard()
@@ -62,6 +63,8 @@ const adminKeyboard = new grammy.Keyboard()
   // .text(SHOW_CAHRT)
   // .row()
   .text(DEPOSIT)
+  .text(AUTO_PURCHASE_CONFIG)
+  .row()
   .text(CHECK_NEW_GIFTS)
   .row()
   .text("- - - - - - - - - - -")

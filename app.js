@@ -46,6 +46,7 @@ const {
   getAllGiftsBuyable,
   newGiftNameBuyable,
 } = require("./controllers/buyableGiftServices");
+const { getAllAutoPurchases } = require("./controllers/autoPurchaseServices");
 
 const bot = new Bot(TOKEN);
 bot.api
@@ -612,6 +613,28 @@ setInterval(async () => {
         await newGiftNameBuyable(gift.id).catch((err) => {
           console.log(err);
         });
+
+        const allAutoPurchases = await getAllAutoPurchases({
+          minPrice: { [Op.lte]: gift.star_count },
+          maxPrice: { [Op.gte]: gift.star_count },
+          maxSupply: { [Op.gt]: gift.total_count },
+          isActive: true,
+        });
+        for (const autoPurchase of allAutoPurchases) {
+          for (let i = 0; i < autoPurchase.quantity; i++) {
+            const user = await getUser(autoPurchase.user_id);
+            if (user.balance < gift.star_count) {
+              continue;
+            }
+            await bot.api.raw["sendGift"]({
+              user_id: autoPurchase.user_id,
+              gift_id: gift.id,
+              text: "Auto @GiftFinderFullDataBOT ⭐️ by @isAmirMmd 🐘",
+            }).then(async (res) => {
+              await updateBalance(autoPurchase.user_id, -price);
+            });
+          }
+        }
 
         for (const admin of await getAdmins()) {
           await bot.api

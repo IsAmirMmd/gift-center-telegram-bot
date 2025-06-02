@@ -1,5 +1,6 @@
 const actions = {
   MY_ACCOUNT: "👤 My Account",
+  AUTO_PURCHASE_CONFIG: "⚙️ Auto Purchase Config",
   SHOW_CATEGORIES: "📂 Show Categories",
   SHOW_CAHRT: "📊 Show Chart",
   SHOW_CAHRT_ALL: "📈 Show All Chart",

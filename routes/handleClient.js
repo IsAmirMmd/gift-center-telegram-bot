@@ -16,6 +16,7 @@ const {
   CHECK_NEW_GIFTS,
   DEPOSIT,
   MY_ACCOUNT,
+  AUTO_PURCHASE_CONFIG,
 } = require("../core/actions");
 const path = require("path");
 const {
@@ -37,6 +38,9 @@ const { TFilteredData } = require("../models/filter");
 const User = require("../models/user");
 const { saleHistory, fetchPage } = require("../gifts");
 const { default: axios } = require("axios");
+const {
+  newAutoPurchaseFilter,
+} = require("../controllers/autoPurchaseServices");
 
 // Middleware to check if the user is an admin
 async function checkAdmin(ctx, next) {
@@ -532,6 +536,153 @@ Balance: ${balance} Stars ⭐️`
     console.error(error);
     await ctx
       .reply("An error occurred while fetching your account info.")
+      .catch(() => {});
+  }
+});
+
+bot.hears(AUTO_PURCHASE_CONFIG, checkAdmin, async (ctx) => {
+  try {
+    const newConfig = await newAutoPurchaseFilter(ctx.chat.id);
+
+    const keyboard = new grammy.InlineKeyboard()
+      .text("Min Price: " + newConfig.minPrice, "set_minPrice")
+      .text("Max Price: " + newConfig.maxPrice, "set_maxPrice")
+      .row()
+      .text("Max Supply: " + newConfig.maxSupply, "set_maxSupply")
+      .text("Quantity: " + newConfig.quantity, "set_quantity")
+      .row()
+      .text(newConfig.isActive ? "Active ✅" : "Inactive ❌", "toggle_active");
+
+    ctx
+      .reply(
+        `Auto Purchase Config created for user ID: ${ctx.chat.id}. You can now set your auto purchase preferences.`,
+        {
+          reply_markup: keyboard,
+        }
+      )
+      .catch(() => {});
+  } catch (error) {}
+});
+
+bot.callbackQuery(/set_(minPrice|maxPrice|maxSupply|quantity)/, async (ctx) => {
+  try {
+    const key = ctx.match[1];
+    let keyboard;
+    if (key === "quantity") {
+      keyboard = new grammy.InlineKeyboard();
+      for (let i = 1; i <= 10; i++) {
+        keyboard.text(i.toString(), `${key}_${i}`);
+        if (i % 3 === 0) keyboard.row();
+      }
+      await ctx
+        .editMessageText("Select quantity:", { reply_markup: keyboard })
+        .catch(() => {});
+      return;
+    } else {
+      const suggestions = {
+        minPrice: [1000, 2000, 2500, 5000, 10000],
+        maxPrice: [2000, 2500, 5000, 10000],
+        maxSupply: [5000, 10000, 15000, 20000],
+      };
+      if (suggestions[key]) {
+        keyboard = new grammy.InlineKeyboard();
+        suggestions[key].forEach((val) => {
+          keyboard.text(val.toString(), `${key}_${val}`);
+        });
+        await ctx
+          .editMessageText(`Select ${key}:`, { reply_markup: keyboard })
+          .catch(() => {});
+        return;
+      }
+    }
+
+    await updateStatus(ctx.chat.id, `SET_${key.toUpperCase()}`);
+    await ctx.reply(`Please enter a new value for ${key}:`).catch(() => {});
+  } catch (error) {
+    console.error(error);
+    await ctx
+      .reply("An error occurred while updating your preference.")
+      .catch(() => {});
+  }
+});
+
+bot.callbackQuery(
+  /^(minPrice|maxPrice|maxSupply|quantity)_(\d+)$/,
+  async (ctx) => {
+    try {
+      const [key, value] = ctx.callbackQuery.data.split("_");
+      const config = await newAutoPurchaseFilter(ctx.chat.id);
+      if (key === "minPrice") {
+        if (Number(value) >= Number(config.maxPrice)) {
+          config.maxPrice = Number(value);
+          config.minPrice = Number(config.maxPrice);
+          await ctx
+            .answerCallbackQuery(
+              "Min Price was greater than Max Price. Swapped values."
+            )
+            .catch(() => {});
+        } else {
+          config.minPrice = Number(value);
+        }
+      } else if (key === "maxPrice") {
+        if (Number(value) <= Number(config.minPrice)) {
+          config.minPrice = Number(value);
+          config.maxPrice = Number(config.minPrice);
+          await ctx
+            .answerCallbackQuery(
+              "Max Price was less than Min Price. Swapped values."
+            )
+            .catch(() => {});
+        } else {
+          config.maxPrice = Number(value);
+        }
+      } else {
+        config[key] = key === "quantity" ? parseInt(value) : Number(value);
+      }
+      await config.save?.();
+      const keyboard = new grammy.InlineKeyboard()
+        .text("Min Price: " + config.minPrice, "set_minPrice")
+        .text("Max Price: " + config.maxPrice, "set_maxPrice")
+        .row()
+        .text("Max Supply: " + config.maxSupply, "set_maxSupply")
+        .text("Quantity: " + config.quantity, "set_quantity")
+        .row()
+        .text(config.isActive ? "Active ✅" : "Inactive ❌", "toggle_active");
+      await ctx
+        .editMessageReplyMarkup({ reply_markup: keyboard })
+        .catch(() => {});
+      await ctx.answerCallbackQuery("Updated " + key).catch(() => {});
+    } catch (error) {
+      console.error(error);
+      await ctx
+        .reply("An error occurred while updating your preference.")
+        .catch(() => {});
+    }
+  }
+);
+
+bot.callbackQuery("toggle_active", async (ctx) => {
+  try {
+    // Toggle isActive for this user
+    const config = await newAutoPurchaseFilter(ctx.chat.id);
+    config.isActive = !config.isActive;
+    await config.save?.();
+    const keyboard = new grammy.InlineKeyboard()
+      .text("Min Price: " + config.minPrice, "set_minPrice")
+      .text("Max Price: " + config.maxPrice, "set_maxPrice")
+      .row()
+      .text("Max Supply: " + config.maxSupply, "set_maxSupply")
+      .text("Quantity: " + config.quantity, "set_quantity")
+      .row()
+      .text(config.isActive ? "Active ✅" : "Inactive ❌", "toggle_active");
+    await ctx
+      .editMessageReplyMarkup({ reply_markup: keyboard })
+      .catch(() => {});
+    await ctx.answerCallbackQuery("Toggled active status.").catch(() => {});
+  } catch (error) {
+    console.error(error);
+    await ctx
+      .reply("An error occurred while toggling active status.")
       .catch(() => {});
   }
 });

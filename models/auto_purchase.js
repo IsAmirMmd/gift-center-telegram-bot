@@ -3,15 +3,19 @@ const { DataTypes } = require("sequelize");
 
 const AutoPurchase = sequelize.define("AutoPurchase", {
   minPrice: {
-    type: DataTypes.STRING,
+    type: DataTypes.INTEGER,
+    defaultValue: 2500,
   },
   maxPrice: {
-    type: DataTypes.STRING,
+    type: DataTypes.INTEGER,
+    defaultValue: 10000,
   },
   maxSupply: {
+    defaultValue: 150000,
     type: DataTypes.INTEGER,
   },
   quantity: {
+    defaultValue: 1,
     type: DataTypes.INTEGER,
   },
   user_id: {
