@@ -635,30 +635,6 @@ setInterval(async () => {
             });
           }
         }
-
-        for (const admin of await getAdmins()) {
-          await bot.api
-            .sendMessage(
-              admin.user_id,
-              `A new gift has been found: ${gift.id}\nCost: ${
-                gift.star_count
-              } ⭐️
-Emoji: ${gift.sticker?.emoji}
-${gift.upgrade_star_count ? `Upgrade cost: ${gift.upgrade_star_count} ⭐️` : ""}
-      ${
-        gift.remaining_count && gift.total_count
-          ? ` ${gift.remaining_count} out of ${gift.total_count} remaining`
-          : ""
-      }`,
-              {
-                reply_markup: new InlineKeyboard().text(
-                  "Purchase",
-                  `buyforme_${gift.id}_${gift.star_count}`
-                ),
-              }
-            )
-            .catch((err) => console.log(err));
-        }
       }
     });
   } catch (err) {
