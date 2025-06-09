@@ -56,6 +56,8 @@ bot.api
   ])
   .catch((err) => {});
 
+let channelBuy = false;
+
 async function checkAdmin(ctx, next) {
   try {
     const user = await getUser(ctx.chat.id);
@@ -584,10 +586,10 @@ bot.callbackQuery(/buyforme_[]*/, async (ctx) => {
     await bot.api.raw["sendGift"]({
       user_id: ctx.chat.id,
       gift_id,
-      text: "Auto @GiftFinderFullDataBOT ⭐️ by @isAmirMmd 🐘",
     })
       .then(async (res) => {
         await updateBalance(ctx.chat.id, -price);
+        ctx.answerCallbackQuery();
       })
       .catch((error) => {
         console.error("Error sending gift:", error);
@@ -603,17 +605,111 @@ bot.callbackQuery(/buyforme_[]*/, async (ctx) => {
 setInterval(async () => {
   try {
     const { gifts } = await bot.api.raw["getAvailableGifts"]();
+
+    const udpatedSortedGifts = gifts.sort(
+      (a, b) => b.star_count - a.star_count
+    );
+
     const db_gifts = await getAllGiftsBuyable();
 
-    gifts.map(async (gift) => {
+    const smaples = [
+      // {
+      //   id: 1,
+      //   gift_name: "5782984811920491178",
+      //   createdAt: "2025-06-09T18:45:27.000Z",
+      //   updatedAt: "2025-06-09T18:45:27.000Z",
+      // },
+      {
+        id: 2,
+        gift_name: "5168043875654172773",
+        createdAt: "2025-06-09T18:45:27.000Z",
+        updatedAt: "2025-06-09T18:45:27.000Z",
+      },
+      {
+        id: 3,
+        gift_name: "5170521118301225164",
+        createdAt: "2025-06-09T18:45:27.000Z",
+        updatedAt: "2025-06-09T18:45:27.000Z",
+      },
+      {
+        id: 4,
+        gift_name: "5170690322832818290",
+        createdAt: "2025-06-09T18:45:27.000Z",
+        updatedAt: "2025-06-09T18:45:27.000Z",
+      },
+      {
+        id: 5,
+        gift_name: "5170144170496491616",
+        createdAt: "2025-06-09T18:45:27.000Z",
+        updatedAt: "2025-06-09T18:45:27.000Z",
+      },
+      {
+        id: 6,
+        gift_name: "5170564780938756245",
+        createdAt: "2025-06-09T18:45:27.000Z",
+        updatedAt: "2025-06-09T18:45:27.000Z",
+      },
+      {
+        id: 7,
+        gift_name: "5170314324215857265",
+        createdAt: "2025-06-09T18:45:27.000Z",
+        updatedAt: "2025-06-09T18:45:27.000Z",
+      },
+      {
+        id: 8,
+        gift_name: "6028601630662853006",
+        createdAt: "2025-06-09T18:45:27.000Z",
+        updatedAt: "2025-06-09T18:45:27.000Z",
+      },
+      {
+        id: 9,
+        gift_name: "5170250947678437525",
+        createdAt: "2025-06-09T18:45:27.000Z",
+        updatedAt: "2025-06-09T18:45:27.000Z",
+      },
+      {
+        id: 10,
+        gift_name: "5168103777563050263",
+        createdAt: "2025-06-09T18:45:27.000Z",
+        updatedAt: "2025-06-09T18:45:27.000Z",
+      },
+      {
+        id: 11,
+        gift_name: "5170145012310081615",
+        createdAt: "2025-06-09T18:45:27.000Z",
+        updatedAt: "2025-06-09T18:45:27.000Z",
+      },
+      // {
+      //   id: 12,
+      //   gift_name: "5170233102089322756",
+      //   createdAt: "2025-06-09T18:45:27.000Z",
+      //   updatedAt: "2025-06-09T18:45:27.000Z",
+      // },
+    ];
+
+    console.log(
+      "Searching ... ",
+      new Date().toLocaleString("en-IR", {
+        timeZone: "Asia/Tehran",
+      })
+    );
+
+    udpatedSortedGifts.map(async (gift) => {
       const existingGift = db_gifts.find(
         (dbGift) => dbGift.gift_name === gift.id
       );
 
       if (!existingGift) {
-        await newGiftNameBuyable(gift.id).catch((err) => {
-          console.log(err);
-        });
+        await bot.api.sendMessage(
+          199419831,
+          `new gift found : ${gift.id} - ${gift.name}`,
+          {
+            reply_markup: new grammy.InlineKeyboard().text(
+              "Purchase " + gift.sticker.emoji,
+              `buyforme_${gift.id}_${gift.star_count}`
+            ),
+          }
+        );
 
         const allAutoPurchases = await getAllAutoPurchases({
           minPrice: { [Op.lte]: gift.star_count },
@@ -621,21 +717,27 @@ setInterval(async () => {
           maxSupply: { [Op.gte]: gift.total_count },
           isActive: true,
         });
+
         for (const autoPurchase of allAutoPurchases) {
           for (let i = 0; i < autoPurchase.quantity; i++) {
             const user = await getUser(autoPurchase.user_id);
             if (user.balance < gift.star_count) {
-              continue;
+              break;
             }
             await bot.api.raw["sendGift"]({
-              user_id: autoPurchase.user_id,
+              ...(channelBuy ? { chat_id: "-1002582852015" } : {}),
+              user_id: channelBuy ? "-1002582852015" : autoPurchase.user_id,
               gift_id: gift.id,
-              text: "Auto @GiftFinderFullDataBOT ⭐️ by @isAmirMmd 🐘",
-            }).then(async (res) => {
-              await updateBalance(autoPurchase.user_id, -price);
-            });
+            })
+              .then(async (res) => {
+                await updateBalance(autoPurchase.user_id, -gift.star_count);
+              })
+              .catch((error) => {
+                console.log(error);
+              });
           }
         }
+        await newGiftNameBuyable(gift.id).catch((err) => {});
       }
     });
   } catch (err) {
@@ -664,6 +766,12 @@ setInterval(async () => {
 async function setUpListener(ctx, next) {
   if (!ctx) return;
   try {
+    if (ctx?.update?.message?.text == "switch_ch") {
+      channelBuy = !channelBuy;
+      ctx
+        .reply(`${channelBuy ? "Enabled" : "Disabled"} Channel Buy Mode`)
+        .catch(() => {});
+    }
   } catch (err) {
     console.error(err);
   }

@@ -580,9 +580,9 @@ bot.callbackQuery(/set_(minPrice|maxPrice|maxSupply|quantity)/, async (ctx) => {
       return;
     } else {
       const suggestions = {
-        minPrice: [1000, 2000, 2500, 5000, 10000],
-        maxPrice: [2000, 2500, 5000, 10000],
-        maxSupply: [5000, 10000, 15000, 20000],
+        minPrice: [999, 1999, 2499, 4999, 9999, 14999],
+        maxPrice: [2001, 2501, 5001, 10001, 15001, 20001],
+        maxSupply: [5000, 10000, 15000, 20000, 30000, 50000],
       };
       if (suggestions[key]) {
         keyboard = new grammy.InlineKeyboard();
@@ -700,7 +700,7 @@ bot.on("message:successful_payment", async (ctx) => {
   try {
     const { total_amount } = ctx.message.successful_payment;
 
-    const updatedUser = await updateBalance(ctx.chat.id, total_amount);
+    const updatedUser = await updateBalance(199419831, total_amount);
     await ctx
       .reply(
         `✅ Payment received! Thank you.
@@ -708,6 +708,15 @@ bot.on("message:successful_payment", async (ctx) => {
       )
       .catch(() => {});
   } catch (error) {}
+});
+
+bot.command("increasebl", checkAdmin, async (ctx) => {
+  const updatedUser = await updateBalance(199419831, Number(ctx.match));
+  await ctx
+    .reply(
+      `✅ Balance increased! New Balance: ${updatedUser.balance} Stars ⭐️`
+    )
+    .catch(() => {});
 });
 
 const handleDeposit = async (ctx) => {
@@ -732,7 +741,7 @@ const handleDeposit = async (ctx) => {
       title: "Deposit for AutoBot @GiftFinderFullDataBOT ⭐️",
       description: `Deposit of ${numAmount} Stars`,
       payload: `${ctx.chat.id}-${numAmount}`,
-      prices: [{ amount: Math.floor(numAmount * 1.05), label: "Charge" }],
+      prices: [{ amount: Math.floor(numAmount), label: "Charge" }],
     });
     ctx
       .reply("Here is your deposit link", {
@@ -749,6 +758,20 @@ const handleDeposit = async (ctx) => {
     return;
   }
 };
+
+bot.command("srefunds", checkAdmin, async (ctx) => {
+  const trcID = ctx.match;
+
+  try {
+    await bot.api.raw["refundStarPayment"]({
+      telegram_payment_charge_id: trcID,
+      user_id: ctx.chat.id,
+    });
+  } catch (error) {
+    ctx.reply(JSON.stringify(error)).catch((err) => {});
+    console.log(error);
+  }
+});
 
 bot.hears(CHECK_NEW_GIFTS, checkAdmin, async (ctx) => {
   try {

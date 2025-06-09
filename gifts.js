@@ -66,7 +66,7 @@ async function fetchPage(page, gift_names = [], models = []) {
       sort: JSON.stringify({ price: 1, gift_id: -1 }),
       ref: 0,
       price_range: null,
-      user_auth: "",
+    
       filter: JSON.stringify({
         price: { $exists: true },
         refunded: { $ne: true },
