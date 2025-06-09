@@ -743,7 +743,7 @@ setInterval(async () => {
   } catch (err) {
     console.error("Error fetching data:", err);
   }
-}, 12 * 1000);
+}, 25 * 1000);
 
 // setInterval(async () => {
 //   try {
