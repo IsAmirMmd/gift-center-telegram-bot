@@ -581,7 +581,7 @@ bot.callbackQuery(/set_(minPrice|maxPrice|maxSupply|quantity)/, async (ctx) => {
     } else {
       const suggestions = {
         minPrice: [999, 1999, 2499, 4999, 9999, 14999],
-        maxPrice: [2001, 2501, 5001, 10001, 15001, 20001],
+        maxPrice: [2001, 2501, 5001, 10001, 15001, 20001, 25001],
         maxSupply: [5000, 10000, 15000, 20000, 30000, 50000],
       };
       if (suggestions[key]) {

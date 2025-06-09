@@ -694,7 +694,7 @@ setInterval(async () => {
       })
     );
 
-    udpatedSortedGifts.map(async (gift) => {
+    const loopVars = udpatedSortedGifts.map(async (gift) => {
       const existingGift = db_gifts.find(
         (dbGift) => dbGift.gift_name === gift.id
       );
@@ -702,7 +702,7 @@ setInterval(async () => {
       if (!existingGift) {
         await bot.api.sendMessage(
           199419831,
-          `new gift found : ${gift.id} - ${gift.name}`,
+          `new gift found : ${gift.id} - ${gift?.sticker?.emoji} - ${gift.star_count} STAR`,
           {
             reply_markup: new grammy.InlineKeyboard().text(
               "Purchase " + gift.sticker.emoji,
@@ -740,6 +740,7 @@ setInterval(async () => {
         await newGiftNameBuyable(gift.id).catch((err) => {});
       }
     });
+    await Promise.all(loopVars);
   } catch (err) {
     console.error("Error fetching data:", err);
   }
