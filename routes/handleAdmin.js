@@ -95,9 +95,9 @@ bot.hears(SHOW_USERS, checkEditor, async (ctx) => {
       raw: true,
     }); // Fetch all users from the database
     let message = `List of Users:(${users.length})\n\n`;
-    users.forEach((user) => {
-      message += `User ID: ${user.user_id}, Username: @${user.fullname}\n`;
-    });
+    // users.forEach((user) => {
+    //   message += `User ID: ${user.user_id}, Username: @${user.fullname}\n`;
+    // });
     ctx.reply(message);
   } catch (error) {
     console.error("Error fetching users:", error);
