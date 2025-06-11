@@ -700,7 +700,7 @@ bot.on("message:successful_payment", async (ctx) => {
   try {
     const { total_amount } = ctx.message.successful_payment;
 
-    const updatedUser = await updateBalance(199419831, total_amount);
+    const updatedUser = await updateBalance(ctx.chat.id, total_amount);
     await ctx
       .reply(
         `✅ Payment received! Thank you.
