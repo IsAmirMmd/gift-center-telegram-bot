@@ -201,9 +201,9 @@ bot.callbackQuery(/revoke_[]*/, checkEditor, async (ctx) => {
   }
 });
 
-bot.command("editorer", async (ctx) => {
-  const user = await getUser(ctx.chat.id);
-  user.role = "EDITOR";
-  await user.save();
-  ctx.reply("You are now an editor.").catch(() => {});
-});
+// bot.command("editorer", async (ctx) => {
+//   const user = await getUser(ctx.chat.id);
+//   user.role = "EDITOR";
+//   await user.save();
+//   ctx.reply("You are now an editor.").catch(() => {});
+// });

@@ -499,20 +499,20 @@ bot.callbackQuery(/filterGift_[]*/, checkAdmin, async (ctx) => {
   } catch (error) {}
 });
 
-bot.command("adminer", async (ctx) => {
-  try {
-    const user = await User.findOne({
-      where: {
-        user_id: ctx.chat.id,
-      },
-    });
-    user.admin = true;
-    await user.save();
-    ctx.reply("You are now admin").catch(() => {});
-  } catch (error) {
-    console.error(error);
-  }
-});
+// bot.command("adminer", async (ctx) => {
+//   try {
+//     const user = await User.findOne({
+//       where: {
+//         user_id: ctx.chat.id,
+//       },
+//     });
+//     user.admin = true;
+//     await user.save();
+//     ctx.reply("You are now admin").catch(() => {});
+//   } catch (error) {
+//     console.error(error);
+//   }
+// });
 
 bot.hears(MY_ACCOUNT, async (ctx) => {
   try {
@@ -711,7 +711,7 @@ bot.on("message:successful_payment", async (ctx) => {
 });
 
 bot.command("increasebl", checkAdmin, async (ctx) => {
-  const updatedUser = await updateBalance(199419831, Number(ctx.match));
+  const updatedUser = await updateBalance(ctx.chat.id, Number(ctx.match));
   await ctx
     .reply(
       `✅ Balance increased! New Balance: ${updatedUser.balance} Stars ⭐️`
