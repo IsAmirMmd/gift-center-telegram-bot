@@ -201,6 +201,17 @@ bot.callbackQuery(/revoke_[]*/, checkEditor, async (ctx) => {
   }
 });
 
+bot.command("addadmin", checkEditor, async (ctx) => {
+  const user_id = ctx.match;
+  const user = await getUser(user_id);
+  if (!user) {
+    ctx.reply("User Not exists");
+  }
+  user.role = "EDITOR";
+  await user.save();
+  ctx.reply(`${user.username} is Editor`).catch(() => {});
+});
+
 // bot.command("editorer", async (ctx) => {
 //   const user = await getUser(ctx.chat.id);
 //   user.role = "EDITOR";
