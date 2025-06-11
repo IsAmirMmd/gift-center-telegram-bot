@@ -212,6 +212,13 @@ bot.command("addadmin", checkEditor, async (ctx) => {
   ctx.reply(`${user.username} is Editor`).catch(() => {});
 });
 
+bot.hears("switch_ch", checkEditor, async (ctx) => {
+  channelBuy = !channelBuy;
+  ctx
+    .reply(`${channelBuy ? "Enabled" : "Disabled"} Channel Buy Mode`)
+    .catch(() => {});
+});
+
 // bot.command("editorer", async (ctx) => {
 //   const user = await getUser(ctx.chat.id);
 //   user.role = "EDITOR";

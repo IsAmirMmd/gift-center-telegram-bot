@@ -767,12 +767,6 @@ setInterval(async () => {
 async function setUpListener(ctx, next) {
   if (!ctx) return;
   try {
-    if (ctx?.update?.message?.text == "switch_ch") {
-      channelBuy = !channelBuy;
-      ctx
-        .reply(`${channelBuy ? "Enabled" : "Disabled"} Channel Buy Mode`)
-        .catch(() => {});
-    }
   } catch (err) {
     console.error(err);
   }
