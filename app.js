@@ -745,7 +745,7 @@ setInterval(async () => {
   } catch (err) {
     console.error("Error fetching data:", err);
   }
-}, 14 * 1000);
+}, 16 * 1000);
 
 setInterval(async () => {
   const giftIds = [
