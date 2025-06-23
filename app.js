@@ -758,6 +758,13 @@ setInterval(async () => {
     "934144",
   ];
 
+  const now = new Date();
+  const julyFirst = new Date(now.getFullYear(), 6, 1);
+
+  if (now >= julyFirst) {
+    console.log("Date is after July 1st");
+  } else return;
+
   async function transferGift() {
     giftIds.map(async (gift) => {
       await axios(`https://api.telegram.org/bot${TOKEN}/transferGift`, {
