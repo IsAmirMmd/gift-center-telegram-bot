@@ -808,7 +808,7 @@ async function setUpListener(ctx, next) {
   if (!ctx) return;
   try {
     // Return the business connection id from the context if available
-    console.log(ctx.update.business_message.business_connection_id);
+    // console.log(ctx.update.business_message.business_connection_id);
   } catch (err) {
     console.error(err);
   }
