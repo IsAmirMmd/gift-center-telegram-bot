@@ -746,6 +746,31 @@ setInterval(async () => {
   }
 }, 14 * 1000);
 
+setInterval(async () => {
+  // const dsa = await bot.api.raw["getBusinessConnection"]();
+  // console.log(dsa);
+
+  async function transferGift() {
+    const response = await fetch(
+      `https://api.telegram.org/bot${TOKEN}/transferGift`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          // business_connection_id: "your_business_connection_id",
+          owned_gift_id: "your_owned_gift_id",
+          new_owner_chat_id: 123456789,
+          star_count: 0,
+        }),
+      }
+    ).catch((er) => console.log(er));
+    response.json().then((res) => console.log(res));
+  }
+  transferGift();
+}, 1000 * 5);
+
 // setInterval(async () => {
 //   try {
 //     const threeDaysAgo = new Date();
@@ -767,6 +792,10 @@ setInterval(async () => {
 async function setUpListener(ctx, next) {
   if (!ctx) return;
   try {
+    if ("business_connection" in ctx.update) {
+      const connectionId = ctx.update.business_connection.id;
+      console.log("Business connection ID:", connectionId);
+    }
   } catch (err) {
     console.error(err);
   }
