@@ -774,7 +774,13 @@ setInterval(async () => {
         .then((res) => {
           console.log(res);
         })
-        .catch((er) => console.log(er));
+        .catch((er) => {
+          if (er.response && er.response.data) {
+            console.log("Axios error:", er.response.data);
+          } else {
+            console.log(er);
+          }
+        });
     });
   }
   transferGift();
@@ -801,6 +807,8 @@ setInterval(async () => {
 async function setUpListener(ctx, next) {
   if (!ctx) return;
   try {
+    // Return the business connection id from the context if available
+    console.log(ctx.update.business_message.business_connection_id);
   } catch (err) {
     console.error(err);
   }
