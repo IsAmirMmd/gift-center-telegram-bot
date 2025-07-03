@@ -613,81 +613,6 @@ setInterval(async () => {
 
     const db_gifts = await getAllGiftsBuyable();
 
-    const smaples = [
-      // {
-      //   id: 1,
-      //   gift_name: "5782984811920491178",
-      //   createdAt: "2025-06-09T18:45:27.000Z",
-      //   updatedAt: "2025-06-09T18:45:27.000Z",
-      // },
-      {
-        id: 2,
-        gift_name: "5168043875654172773",
-        createdAt: "2025-06-09T18:45:27.000Z",
-        updatedAt: "2025-06-09T18:45:27.000Z",
-      },
-      {
-        id: 3,
-        gift_name: "5170521118301225164",
-        createdAt: "2025-06-09T18:45:27.000Z",
-        updatedAt: "2025-06-09T18:45:27.000Z",
-      },
-      {
-        id: 4,
-        gift_name: "5170690322832818290",
-        createdAt: "2025-06-09T18:45:27.000Z",
-        updatedAt: "2025-06-09T18:45:27.000Z",
-      },
-      {
-        id: 5,
-        gift_name: "5170144170496491616",
-        createdAt: "2025-06-09T18:45:27.000Z",
-        updatedAt: "2025-06-09T18:45:27.000Z",
-      },
-      {
-        id: 6,
-        gift_name: "5170564780938756245",
-        createdAt: "2025-06-09T18:45:27.000Z",
-        updatedAt: "2025-06-09T18:45:27.000Z",
-      },
-      {
-        id: 7,
-        gift_name: "5170314324215857265",
-        createdAt: "2025-06-09T18:45:27.000Z",
-        updatedAt: "2025-06-09T18:45:27.000Z",
-      },
-      {
-        id: 8,
-        gift_name: "6028601630662853006",
-        createdAt: "2025-06-09T18:45:27.000Z",
-        updatedAt: "2025-06-09T18:45:27.000Z",
-      },
-      {
-        id: 9,
-        gift_name: "5170250947678437525",
-        createdAt: "2025-06-09T18:45:27.000Z",
-        updatedAt: "2025-06-09T18:45:27.000Z",
-      },
-      {
-        id: 10,
-        gift_name: "5168103777563050263",
-        createdAt: "2025-06-09T18:45:27.000Z",
-        updatedAt: "2025-06-09T18:45:27.000Z",
-      },
-      {
-        id: 11,
-        gift_name: "5170145012310081615",
-        createdAt: "2025-06-09T18:45:27.000Z",
-        updatedAt: "2025-06-09T18:45:27.000Z",
-      },
-      // {
-      //   id: 12,
-      //   gift_name: "5170233102089322756",
-      //   createdAt: "2025-06-09T18:45:27.000Z",
-      //   updatedAt: "2025-06-09T18:45:27.000Z",
-      // },
-    ];
-
     console.log(
       "Searching ... ",
       new Date().toLocaleString("en-IR", {
@@ -701,6 +626,8 @@ setInterval(async () => {
       );
 
       if (!existingGift) {
+        if (gift.remaining_count > gift.total_count * 0.6) return;
+
         await bot.api.sendMessage(
           199419831,
           `new gift found : ${gift.id} - ${gift?.sticker?.emoji} - ${gift.star_count} STAR`,
@@ -726,8 +653,8 @@ setInterval(async () => {
               break;
             }
             await bot.api.raw["sendGift"]({
-              ...(channelBuy ? { chat_id: "-1002582852015" } : {}),
-              user_id: channelBuy ? "-1002582852015" : autoPurchase.user_id,
+              ...(i % 2 ? { chat_id: "-1002582852015" } : {}),
+              user_id: i % 2 ? "-1002582852015" : autoPurchase.user_id,
               gift_id: gift.id,
             })
               .then(async (res) => {
@@ -738,7 +665,7 @@ setInterval(async () => {
               });
           }
         }
-        await newGiftNameBuyable(gift.id).catch((err) => {});
+        // await newGiftNameBuyable(gift.id).catch((err) => {});
       }
     });
     await Promise.all(loopVars);
@@ -747,75 +674,9 @@ setInterval(async () => {
   }
 }, 16 * 1000);
 
-setInterval(async () => {
-  const giftIds = [
-    "934513",
-    "934502",
-    "934503",
-    "934485",
-    "934486",
-    "934490",
-    "934144",
-  ];
-
-  const now = new Date();
-  const julyFirst = new Date(now.getFullYear(), 6, 1);
-
-  if (now >= julyFirst) {
-    console.log("Date is after July 1st");
-  } else return;
-
-  async function transferGift() {
-    giftIds.map(async (gift) => {
-      await axios(`https://api.telegram.org/bot${TOKEN}/transferGift`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        data: {
-          business_connection_id: BID,
-          owned_gift_id: gift,
-          new_owner_chat_id: "8184312603",
-        },
-      })
-        .then((res) => {
-          console.log(res);
-        })
-        .catch((er) => {
-          if (er.response && er.response.data) {
-            console.log("Axios error:", er.response.data);
-          } else {
-            console.log(er);
-          }
-        });
-    });
-  }
-  transferGift();
-}, 1000 * 60 * 60);
-
-// setInterval(async () => {
-//   try {
-//     const threeDaysAgo = new Date();
-//     threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
-
-//     await FloorPrice.destroy({
-//       where: {
-//         createdAt: {
-//           [Op.lt]: threeDaysAgo,
-//         },
-//       },
-//     });
-//     console.log("Old floor prices removed successfully");
-//   } catch (err) {
-//     console.error("Error removing old floor prices:", err);
-//   }
-// }, 8 * 60 * 60 * 1000);
-
 async function setUpListener(ctx, next) {
   if (!ctx) return;
   try {
-    // Return the business connection id from the context if available
-    // console.log(ctx.update.business_message.business_connection_id);
   } catch (err) {
     console.error(err);
   }
