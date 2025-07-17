@@ -603,82 +603,87 @@ bot.callbackQuery(/buyforme_[]*/, async (ctx) => {
   }
 });
 
-// setInterval(async () => {
-//   try {
-//     const { gifts } = await bot.api.raw["getAvailableGifts"]();
+setInterval(async () => {
+  try {
+    const { gifts } = await bot.api.raw["getAvailableGifts"]().catch(
+      async (err) => {
+        await bot.api.sendMessage(
+          199419831,
+          `Error in fetching gifts ${JSON.stringify(err)}`
+        );
+      }
+    );
 
-//     const udpatedSortedGifts = gifts.sort(
-//       (a, b) => b.star_count - a.star_count
-//     );
+    const udpatedSortedGifts = gifts.sort(
+      (a, b) => b.star_count - a.star_count
+    );
 
-//     const db_gifts = await getAllGiftsBuyable();
+    const db_gifts = await getAllGiftsBuyable();
 
-//     console.log(
-//       "Searching ... ",
-//       new Date().toLocaleString("en-IR", {
-//         timeZone: "Asia/Tehran",
-//       })
-//     );
+    console.log(
+      "Searching ... ",
+      new Date().toLocaleString("en-IR", {
+        timeZone: "Asia/Tehran",
+      })
+    );
 
-//     const loopVars = udpatedSortedGifts.map(async (gift) => {
-//       const existingGift = db_gifts.find(
-//         (dbGift) => dbGift.gift_name === gift.id
-//       );
+    const loopVars = udpatedSortedGifts.map(async (gift) => {
+      const existingGift = db_gifts.find(
+        (dbGift) => dbGift.gift_name === gift.id
+      );
 
-//       if (!existingGift) {
-//         if (gift.remaining_count > gift.total_count * 0.6) return;
+      if (!existingGift) {
+        if (gift.remaining_count > gift.total_count * 0.6) return;
 
-//         await bot.api.sendMessage(
-//           199419831,
-//           `new gift found : ${gift.id} - ${gift?.sticker?.emoji} - ${gift.star_count} STAR`,
-//           {
-//             reply_markup: new grammy.InlineKeyboard().text(
-//               "Purchase " + gift.sticker.emoji,
-//               `buyforme_${gift.id}_${gift.star_count}`
-//             ),
-//           }
-//         );
+        await bot.api.sendMessage(
+          199419831,
+          `new gift found : ${gift.id} - ${gift?.sticker?.emoji} - ${gift.star_count} STAR`,
+          {
+            reply_markup: new grammy.InlineKeyboard().text(
+              "Purchase " + gift.sticker.emoji,
+              `buyforme_${gift.id}_${gift.star_count}`
+            ),
+          }
+        );
 
-//         const allAutoPurchases = await getAllAutoPurchases({
-//           minPrice: { [Op.lte]: gift.star_count },
-//           maxPrice: { [Op.gte]: gift.star_count },
-//           maxSupply: { [Op.gte]: gift.total_count },
-//           isActive: true,
-//         });
+        const allAutoPurchases = await getAllAutoPurchases({
+          minPrice: { [Op.lte]: gift.star_count },
+          maxPrice: { [Op.gte]: gift.star_count },
+          maxSupply: { [Op.gte]: gift.total_count },
+          isActive: true,
+        });
 
-//         for (const autoPurchase of allAutoPurchases) {
-//           for (let i = 0; i < autoPurchase.quantity; i++) {
-//             const user = await getUser(autoPurchase.user_id);
-//             if (user.balance < gift.star_count) {
-//               break;
-//             }
-//             await bot.api.raw["sendGift"]({
-//               ...(i % 2 ? { chat_id: "-1002582852015" } : {}),
-//               user_id: i % 2 ? "-1002582852015" : autoPurchase.user_id,
-//               gift_id: gift.id,
-//             })
-//               .then(async (res) => {
-//                 await updateBalance(autoPurchase.user_id, -gift.star_count);
-//               })
-//               .catch((error) => {
-//                 console.log(error);
-//               });
-//           }
-//         }
-//         // await newGiftNameBuyable(gift.id).catch((err) => {});
-//       }
-//     });
-//     await Promise.all(loopVars);
-//   } catch (err) {
-//     console.error("Error fetching data:", err);
-//   }
-// }, 16 * 1000);
+        for (const autoPurchase of allAutoPurchases) {
+          for (let i = 0; i < autoPurchase.quantity; i++) {
+            const user = await getUser(autoPurchase.user_id);
+            if (user.balance < gift.star_count) {
+              break;
+            }
+            await bot.api.raw["sendGift"]({
+              ...(i % 2 ? { chat_id: "-1002582852015" } : {}),
+              user_id: i % 2 ? "-1002582852015" : autoPurchase.user_id,
+              gift_id: gift.id,
+            })
+              .then(async (res) => {
+                await updateBalance(autoPurchase.user_id, -gift.star_count);
+              })
+              .catch((error) => {
+                console.log(error);
+              });
+          }
+        }
+        // await newGiftNameBuyable(gift.id).catch((err) => {});
+      }
+    });
+    await Promise.all(loopVars);
+  } catch (err) {
+    console.error("Error fetching data:", err);
+  }
+}, 14 * 1000);
 
 async function setUpListener(ctx, next) {
   if (!ctx) return;
   try {
-    console.log(ctx.update.message.caption);
-
     if (ctx.message.text || ctx?.update?.message?.caption) {
       try {
         const apiUrl =
@@ -698,7 +703,7 @@ async function setUpListener(ctx, next) {
         }
       } catch (err) {
         console.error("Translation error:", err);
-        await ctx.reply("Sorry, translation failed.");
+        await ctx.reply("Sorry, translation failed.").catch(() => {});
       }
     }
   } catch (err) {
