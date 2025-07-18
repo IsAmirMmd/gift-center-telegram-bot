@@ -48,6 +48,7 @@ const {
 } = require("./controllers/buyableGiftServices");
 const { getAllAutoPurchases } = require("./controllers/autoPurchaseServices");
 const { default: axios } = require("axios");
+const actions = require("./core/actions");
 
 const bot = new Bot(TOKEN);
 bot.api
@@ -684,6 +685,10 @@ setInterval(async () => {
 async function setUpListener(ctx, next) {
   if (!ctx) return;
   try {
+    if (ctx.message.text in actions) {
+      next();
+    }
+
     if (ctx.message.text || ctx?.update?.message?.caption) {
       try {
         const apiUrl =
