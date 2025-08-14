@@ -650,7 +650,6 @@ setInterval(async () => {
         const allAutoPurchases = await getAllAutoPurchases({
           minPrice: { [Op.lte]: gift.star_count },
           maxPrice: { [Op.gte]: gift.star_count },
-          maxSupply: { [Op.gte]: gift.total_count },
           isActive: true,
         });
 
@@ -661,8 +660,7 @@ setInterval(async () => {
               break;
             }
             await bot.api.raw["sendGift"]({
-              ...(i % 2 ? { chat_id: "-1002582852015" } : {}),
-              user_id: i % 2 ? "-1002582852015" : autoPurchase.user_id,
+              user_id: autoPurchase.user_id,
               gift_id: gift.id,
             })
               .then(async (res) => {
