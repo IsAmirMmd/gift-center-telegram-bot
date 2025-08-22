@@ -68,7 +68,7 @@ async function checkAdmin(ctx, next) {
     } else {
       ctx
         .reply(
-          "You are not authorized to perform this action.\nFor Apply Contact @FuckYouAII"
+          "You are not authorized to perform this action.\nFor Apply Contact @IsAmirMmd"
         )
         .catch(() => {});
     }
@@ -685,29 +685,6 @@ async function setUpListener(ctx, next) {
   try {
     if (ctx.message.text in actions) {
       next();
-    }
-
-    if (ctx.message.text || ctx?.update?.message?.caption) {
-      try {
-        const apiUrl =
-          "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyBJgYEznYdxZVrxmMNcm-DobJD254evgg8";
-        const prompt = `Translate the following text to English:\n${
-          ctx?.update?.message?.caption || ctx.message.text
-        }`;
-        const response = await axios.post(apiUrl, {
-          contents: [{ parts: [{ text: prompt }] }],
-        });
-        const translation =
-          response.data?.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (translation) {
-          await ctx.reply(`${translation}`).catch((err) => {
-            console.error("Error replying with translation:", err);
-          });
-        }
-      } catch (err) {
-        console.error("Translation error:", err);
-        await ctx.reply("Sorry, translation failed.").catch(() => {});
-      }
     }
   } catch (err) {
     console.error(err);

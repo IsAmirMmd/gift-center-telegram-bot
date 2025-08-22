@@ -37,7 +37,6 @@ const { backgrounds } = require("../controllers/functions");
 const { TFilteredData } = require("../models/filter");
 const User = require("../models/user");
 const { saleHistory, fetchPage } = require("../gifts");
-const { default: axios } = require("axios");
 const {
   newAutoPurchaseFilter,
 } = require("../controllers/autoPurchaseServices");
@@ -50,7 +49,7 @@ async function checkAdmin(ctx, next) {
       return next();
     } else {
       ctx.reply(
-        "You are not authorized to perform this action.\nFor Apply Contact @FuckYouAII"
+        "You are not authorized to perform this action.\nFor Apply Contact @IsAmirMmd"
       );
     }
   } catch (error) {
@@ -778,6 +777,8 @@ bot.hears(CHECK_NEW_GIFTS, checkAdmin, async (ctx) => {
     await updateStatus(ctx.chat.id, "START").catch(() => {});
 
     const listsOfGifts = await bot.api.raw["getAvailableGifts"]();
+
+    console.log(listsOfGifts);
 
     for (const gift of listsOfGifts.gifts) {
       await ctx.reply(
