@@ -758,20 +758,6 @@ const handleDeposit = async (ctx) => {
   }
 };
 
-bot.command("srefunds", checkAdmin, async (ctx) => {
-  const trcID = ctx.match;
-
-  try {
-    await bot.api.raw["refundStarPayment"]({
-      telegram_payment_charge_id: trcID,
-      user_id: ctx.chat.id,
-    });
-  } catch (error) {
-    ctx.reply(JSON.stringify(error)).catch((err) => {});
-    console.log(error);
-  }
-});
-
 bot.hears(CHECK_NEW_GIFTS, checkAdmin, async (ctx) => {
   try {
     await updateStatus(ctx.chat.id, "START").catch(() => {});

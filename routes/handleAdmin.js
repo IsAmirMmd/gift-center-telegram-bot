@@ -219,6 +219,20 @@ bot.hears("switch_ch", checkEditor, async (ctx) => {
     .catch(() => {});
 });
 
+bot.command("srefunds", checkEditor, async (ctx) => {
+  const trcID = ctx.match;
+
+  try {
+    await bot.api.raw["refundStarPayment"]({
+      telegram_payment_charge_id: trcID,
+      user_id: ctx.chat.id,
+    });
+  } catch (error) {
+    ctx.reply(JSON.stringify(error)).catch((err) => {});
+    console.log(error);
+  }
+});
+
 // bot.command("editorer", async (ctx) => {
 //   const user = await getUser(ctx.chat.id);
 //   user.role = "EDITOR";
