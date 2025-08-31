@@ -583,7 +583,7 @@ bot.callbackQuery(/buyforme_[]*/, async (ctx) => {
         )
         .catch(() => {});
     }
-    ctx.editMessageText("Sending gift...").catch(() => {});
+    ctx.reply("Sending gift...").catch(() => {});
 
     await bot.api.raw["sendGift"]({
       user_id: ctx.chat.id,
@@ -678,7 +678,7 @@ setInterval(async () => {
   } catch (err) {
     console.error("Error fetching data:", err);
   }
-}, 14 * 1000);
+}, 12 * 1000);
 
 async function setUpListener(ctx, next) {
   if (!ctx) return;
