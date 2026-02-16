@@ -232,7 +232,7 @@ bot.callbackQuery(/buyforme_[]*/, async (ctx) => {
         gift_id,
       })
         .then(async (res) => {
-          await updateBalance(ctx.chat.id, -price);
+          await updateBalance(ctx.chat.id, -parseInt(price));
           ctx.answerCallbackQuery();
         })
         .catch((error) => {
