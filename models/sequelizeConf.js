@@ -11,7 +11,7 @@ const sequelize = new Sequelize(
     port: 3306,
     dialect: cred.dialect,
     logging: false,
-  }
+  },
 );
 
 sequelize.authenticate().then(() => {

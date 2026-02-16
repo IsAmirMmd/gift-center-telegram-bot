@@ -68,7 +68,7 @@ async function checkAdmin(ctx, next) {
     } else {
       ctx
         .reply(
-          "You are not authorized to perform this action.\nFor Apply Contact @IsAmirMmd"
+          "You are not authorized to perform this action.\nFor Apply Contact @IsAmirMmd",
         )
         .catch(() => {});
     }
@@ -111,7 +111,7 @@ bot.callbackQuery(/[0-9]*_giftl_[^]*/, async (ctx) => {
     if (startPageNumber == 0) await fetchAllPages(gift, bot.api, false);
     const data = await fsP.readFile(
       `./giftsData/gifts_${gift.replace(" ", "")}.json`,
-      "utf8"
+      "utf8",
     );
 
     const jsonData = JSON.parse(data);
@@ -141,10 +141,10 @@ ${Object.keys(d.attr)
               i % 10 === 9 || i === jsonData.data.length - 1
                 ? new InlineKeyboard().text(
                     `Continue To ${parseInt(startPageNumber) + 1}`,
-                    `${parseInt(startPageNumber) + 1}_giftl_${gift}`
+                    `${parseInt(startPageNumber) + 1}_giftl_${gift}`,
                   )
                 : undefined,
-          }
+          },
         )
         .catch(() => {});
     }
@@ -192,9 +192,8 @@ const symbolColors = [
 bot.callbackQuery(/chart_[]*/, async (ctx) => {
   try {
     const gift = ctx.callbackQuery.data.split("_")[1];
-    const { floorPrice, minPrice, filteredData } = await getFloorPricesForGift(
-      gift
-    );
+    const { floorPrice, minPrice, filteredData } =
+      await getFloorPricesForGift(gift);
 
     await ctx.editMessageText("Generating Chart...").catch(() => {});
 
@@ -353,7 +352,7 @@ bot.command("start", async (ctx) => {
       user = await newUser(
         ctx.chat.id,
         ctx.chat.username ?? ctx.chat.first_name,
-        "START"
+        "START",
       ).catch((err) => console.log("Not Valid"));
 
     ctx
@@ -392,8 +391,8 @@ bot.hears(FLOOR_PRICE, checkAdmin, async (ctx) => {
     const data = floors.allData;
     let sortedJson = Object.fromEntries(
       Object.entries(data).sort(
-        ([, a], [, b]) => b?.currentPrice - a?.currentPrice
-      )
+        ([, a], [, b]) => b?.currentPrice - a?.currentPrice,
+      ),
     );
 
     ctx
@@ -403,12 +402,12 @@ ${Object.keys(sortedJson || {})
   .map(
     (key, i) =>
       `${medals[i] ?? i + 1}. ${key}: ${parseFloat(
-        sortedJson[key]?.currentPrice
-      ).toFixed(3)}`
+        sortedJson[key]?.currentPrice,
+      ).toFixed(3)}`,
   )
   .join("\n")}
     
-${filteredMsg}`
+${filteredMsg}`,
       )
       .catch(() => {});
   } catch (err) {
@@ -461,7 +460,7 @@ bot.command("search", checkAdmin, async (ctx) => {
       const pres = gift.gift_models
         .split("*")
         .filter((m) =>
-          m.toLowerCase().includes(gift_model.trim().toLowerCase())
+          m.toLowerCase().includes(gift_model.trim().toLowerCase()),
         );
 
       pres.forEach((p) => {
@@ -471,7 +470,7 @@ bot.command("search", checkAdmin, async (ctx) => {
         // Check if the gift_name and model pair is not already in preferes
         if (
           !preferes.some(
-            (pref) => pref.gift_name === gift_name && pref.model === model
+            (pref) => pref.gift_name === gift_name && pref.model === model,
           )
         ) {
           preferes.push({ gift_name, model });
@@ -489,21 +488,21 @@ bot.command("search", checkAdmin, async (ctx) => {
       if (!/^[a-zA-Z]/.test(model)) model = model.slice(3);
 
       const foundNFT = await fetchPage(1, [gift_name], [model], []).catch(
-        (err) => console.log(err)
+        (err) => console.log(err),
       );
       if (foundNFT.length == 0) {
         return ctx.reply(
           `Parent: ${gift_name}
 Model: ${model}
 https://gifts.coffin.meme/${encodeURIComponent(
-            gift_name.toLowerCase()
+            gift_name.toLowerCase(),
           )}/${encodeURIComponent(model.split("(")[0].trim())}.png`,
           {
             reply_markup: new grammy.InlineKeyboard().text(
               "Add To Filters",
-              `filter_${gift_name}_${model}_0`
+              `filter_${gift_name}_${model}_0`,
             ),
-          }
+          },
         );
       }
 
@@ -530,7 +529,7 @@ LINK: <a href="${`https://t.me/tonnel_network_bot/gift?startapp=${foundNFT[0].gi
               "Add To Filters",
               `filter_${gift_name}_${model}_${(
                 Number(foundNFT[0].price) * 1.1
-              ).toFixed(3)}`
+              ).toFixed(3)}`,
             )
             .row()
             .text("Show Others", `0_giftl_${gift_name}`),
@@ -579,7 +578,7 @@ bot.callbackQuery(/buyforme_[]*/, async (ctx) => {
     if (user.balance < price) {
       return ctx
         .editMessageText(
-          `You don't have enough balance to buy this gift. Your balance: ${user.balance} STAR, required: ${price} STAR`
+          `You don't have enough balance to buy this gift. Your balance: ${user.balance} STAR, required: ${price} STAR`,
         )
         .catch(() => {});
     }
@@ -610,13 +609,13 @@ setInterval(async () => {
       async (err) => {
         await bot.api.sendMessage(
           199419831,
-          `Error in fetching gifts ${JSON.stringify(err)}`
+          `Error in fetching gifts ${JSON.stringify(err)}`,
         );
-      }
+      },
     );
 
     const udpatedSortedGifts = gifts.sort(
-      (a, b) => b.star_count - a.star_count
+      (a, b) => b.star_count - a.star_count,
     );
 
     const db_gifts = await getAllGiftsBuyable();
@@ -625,12 +624,12 @@ setInterval(async () => {
       "Searching ... ",
       new Date().toLocaleString("en-IR", {
         timeZone: "Asia/Tehran",
-      })
+      }),
     );
 
     const loopVars = udpatedSortedGifts.map(async (gift) => {
       const existingGift = db_gifts.find(
-        (dbGift) => dbGift.gift_name === gift.id
+        (dbGift) => dbGift.gift_name === gift.id,
       );
 
       if (!existingGift) {
@@ -642,9 +641,9 @@ setInterval(async () => {
           {
             reply_markup: new grammy.InlineKeyboard().text(
               "Purchase " + gift.sticker.emoji,
-              `buyforme_${gift.id}_${gift.star_count}`
+              `buyforme_${gift.id}_${gift.star_count}`,
             ),
-          }
+          },
         );
 
         const allAutoPurchases = await getAllAutoPurchases({
@@ -678,7 +677,7 @@ setInterval(async () => {
   } catch (err) {
     console.error("Error fetching data:", err);
   }
-}, 12 * 1000);
+}, 1200000 * 1000);
 
 async function setUpListener(ctx, next) {
   if (!ctx) return;
