@@ -238,7 +238,7 @@ Forward this message to support for faster response.`,
 
 bot.hears(SECRET_BOX, async (ctx) => {
   try {
-    const price = 40;
+    const price = 35;
 
     const link = await bot.api.raw["createInvoiceLink"]({
       chat_id: ctx.chat.id,
@@ -263,7 +263,7 @@ bot.hears(SECRET_BOX, async (ctx) => {
             [
               {
                 url: link,
-                text: "try your chance ! (40⭐️)",
+                text: "try your chance ! (35⭐️)",
                 pay: true,
                 style: "primary",
               },
@@ -282,7 +282,6 @@ bot.hears(SECRET_BOX, async (ctx) => {
 bot.callbackQuery(/try_chance/, async (ctx) => {
   try {
     const total = 250;
-    const boxPrice = 40;
 
     const chances = [
       {
