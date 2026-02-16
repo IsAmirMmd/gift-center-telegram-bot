@@ -427,13 +427,10 @@ bot.command("increasebl", checkAdmin, async (ctx) => {
     .catch(() => {});
 });
 
-bot.hears(CHECK_NEW_GIFTS, checkAdmin, async (ctx) => {
+bot.hears(CHECK_NEW_GIFTS, async (ctx) => {
   try {
     await updateStatus(ctx.chat.id, "START").catch(() => {});
-
     const listsOfGifts = await bot.api.raw["getAvailableGifts"]();
-
-    console.log(listsOfGifts.gifts[0]);
 
     const customGifts = [
       {
