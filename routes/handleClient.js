@@ -17,6 +17,7 @@ const {
   DEPOSIT,
   MY_ACCOUNT,
   AUTO_PURCHASE_CONFIG,
+  SECRET_BOX,
 } = require("../core/actions");
 const path = require("path");
 const {
@@ -140,15 +141,282 @@ bot.on("pre_checkout_query", async (ctx) => {
 
 bot.on("message:successful_payment", async (ctx) => {
   try {
-    const { total_amount } = ctx.message.successful_payment;
+    const { total_amount, invoice_payload } = ctx.message.successful_payment;
+    const [userId, amount, gift_id] = invoice_payload.split("-");
 
-    const updatedUser = await updateBalance(ctx.chat.id, total_amount);
+    if (gift_id == "secret_box") {
+      const chances = [
+        {
+          gift: "🧸",
+          probability: 0.85,
+          custom_icon: "5827703959866840974",
+          star_cost: 15,
+          id: "5170233102089322756",
+        },
+        {
+          gift: "🌹",
+          probability: 0.05,
+          custom_icon: "5825672887012432913",
+          star_cost: 25,
+          id: "5168103777563050263",
+        },
+        {
+          gift: "🎁",
+          probability: 0.04,
+          custom_icon: "5825613079592835863",
+          star_cost: 25,
+          id: "5170250947678437525",
+        },
+        {
+          gift: "valentine teddy",
+          probability: 0.02,
+          custom_icon: "5800818937767664668",
+          star_cost: 50,
+          id: "5800655655995968830",
+        },
+        {
+          gift: "🚀",
+          probability: 0.02,
+          custom_icon: "5827869573805776156",
+          star_cost: 50,
+          id: "5170564780938756245",
+        },
+        {
+          gift: "💍",
+          probability: 0.015,
+          custom_icon: "5825432961549343041",
+          star_cost: 100,
+          id: "5170690322832818290",
+        },
+      ];
+
+      let selectedGift = null;
+      const randomChance = Math.random();
+      let cumulativeProbability = 0;
+
+      for (const chance of chances) {
+        cumulativeProbability += chance.probability;
+        if (randomChance <= cumulativeProbability) {
+          selectedGift = chance;
+          break;
+        }
+      }
+
+      await bot.api.raw["sendGift"]({
+        user_id: ctx.chat.id,
+        gift_id: selectedGift.id,
+        text: "Secret Box Gift 🎁",
+      }).catch((error) => {
+        console.error("Error sending gift:", error);
+        ctx
+          .reply(
+            `Error in sending gift :
+Your gift : ${selectedGift.gift} (⭐️${selectedGift.star_cost})
+Please contact support @isAmirMmd
+
+Forward this message to support for faster response.`,
+          )
+          .catch(() => {});
+      });
+    } else {
+      await bot.api.raw["sendGift"]({
+        user_id: ctx.chat.id,
+        gift_id,
+      })
+        .then(async (res) => {
+          ctx.answerCallbackQuery();
+        })
+        .catch((error) => {
+          console.error("Error sending gift:", error);
+          ctx
+            .reply("Error in sending gift : " + error.description)
+            .catch(() => {});
+        });
+    }
+  } catch (error) {}
+});
+
+bot.hears(SECRET_BOX, async (ctx) => {
+  try {
+    const price = 40;
+
+    const link = await bot.api.raw["createInvoiceLink"]({
+      chat_id: ctx.chat.id,
+      currency: "XTR",
+      title: "Deposit for Juliva ⭐️",
+      description: `Deposit of ${price} Stars`,
+      payload: `${ctx.chat.id}-${price}-secret_box`,
+      prices: [{ amount: Math.floor(price), label: "Charge" }],
+    });
+
     await ctx
-      .reply(
-        `✅ Payment received! Thank you.
-      New Balance : ${updatedUser.balance} Stars ⭐️`,
-      )
+      .reply("Checking Chance", {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                callback_data: "check_chance",
+                text: "Check percentage",
+                style: "success",
+              },
+            ],
+            [
+              {
+                url: link,
+                text: "try your chance ! (40⭐️)",
+                pay: true,
+                style: "primary",
+              },
+            ],
+          ],
+        },
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  } catch (err) {
+    console.error(err);
+  }
+});
+
+bot.callbackQuery(/try_chance/, async (ctx) => {
+  try {
+    const total = 250;
+    const boxPrice = 40;
+
+    const chances = [
+      {
+        gift: "🧸",
+        probability: 0.85,
+        custom_icon: "5827703959866840974",
+        star_cost: 15,
+        id: "5170233102089322756",
+      },
+      {
+        gift: "🌹",
+        probability: 0.05,
+        custom_icon: "5825672887012432913",
+        star_cost: 25,
+        id: "5168103777563050263",
+      },
+      {
+        gift: "🎁",
+        probability: 0.04,
+        custom_icon: "5825613079592835863",
+        star_cost: 25,
+        id: "5170250947678437525",
+      },
+      {
+        gift: "tv",
+        probability: 0.02,
+        custom_icon: "5800818937767664668",
+        star_cost: 50,
+        id: "5800655655995968830",
+      },
+      {
+        gift: "🚀",
+        probability: 0.02,
+        custom_icon: "5827869573805776156",
+        star_cost: 50,
+        id: "5170564780938756245",
+      },
+      {
+        gift: "💍",
+        probability: 0.015,
+        custom_icon: "5825432961549343041",
+        star_cost: 100,
+        id: "5170690322832818290",
+      },
+    ];
+
+    let selectedGift = null;
+    const randomChance = Math.random();
+    let cumulativeProbability = 0;
+
+    for (const chance of chances) {
+      cumulativeProbability += chance.probability;
+      if (randomChance <= cumulativeProbability) {
+        selectedGift = chance;
+        break;
+      }
+    }
+
+    await bot.api.raw["sendGift"]({
+      user_id: ctx.chat.id,
+      gift_id: selectedGift.id,
+      text: "Secret Box Gift 🎁",
+    }).catch((error) => {
+      console.error("Error sending gift:", error);
+      ctx
+        .reply(
+          `Error in sending gift : 
+Please contact support @isAmirMmd`,
+        )
+        .catch(() => {});
+    });
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+bot.callbackQuery(/check_chance/, async (ctx) => {
+  try {
+    const chances = [
+      {
+        gift: "🧸",
+        probability: 0.34,
+        custom_icon: "5827703959866840974",
+        star_cost: 15,
+      },
+      {
+        gift: "🌹",
+        probability: 0.22,
+        custom_icon: "5825672887012432913",
+        star_cost: 25,
+      },
+      {
+        gift: "🎁",
+        probability: 0.17,
+        custom_icon: "5825613079592835863",
+        star_cost: 25,
+      },
+      {
+        gift: "tv",
+        probability: 0.1,
+        custom_icon: "5800818937767664668",
+        star_cost: 50,
+        id: "5800655655995968830",
+      },
+      {
+        gift: "🚀",
+        probability: 0.1,
+        custom_icon: "5827869573805776156",
+        star_cost: 50,
+      },
+      {
+        gift: "💍",
+        probability: 0.05,
+        custom_icon: "5825432961549343041",
+        star_cost: 100,
+      },
+    ];
+
+    let message = "🎁 Chance Percentages:\n";
+    await ctx
+      .reply(message, {
+        reply_markup: {
+          inline_keyboard: chances.map((chance) => [
+            {
+              icon_custom_emoji_id: chance.custom_icon,
+              callback_data: `select_gift_${chance.gift}`,
+              text: `${chance.probability * 100}%`,
+            },
+          ]),
+        },
+      })
       .catch(() => {});
+
+    await ctx.answerCallbackQuery().catch(() => {});
   } catch (error) {}
 });
 
@@ -158,46 +426,6 @@ bot.command("increasebl", checkAdmin, async (ctx) => {
     .reply(`✅ Balance increased! New Balance: ${updatedUser.balance} Stars ⭐️`)
     .catch(() => {});
 });
-
-const handleDeposit = async (ctx) => {
-  try {
-    const amount = ctx.message.text;
-    const numAmount = Number(amount);
-
-    if (isNaN(numAmount) || numAmount < 0) {
-      await ctx
-        .reply("❌ Please enter a valid amount greater than 100.")
-        .catch(() => {});
-      return;
-    }
-    await updateStatus(ctx.chat.id, "START").catch(() => {});
-    await ctx
-      .reply(`You want to deposit ${numAmount}. Proceeding...`)
-      .catch(() => {});
-
-    const link = await bot.api.raw["createInvoiceLink"]({
-      chat_id: ctx.chat.id,
-      currency: "XTR",
-      title: "Deposit for AutoBot @GiftFinderFullDataBOT ⭐️",
-      description: `Deposit of ${numAmount} Stars`,
-      payload: `${ctx.chat.id}-${numAmount}`,
-      prices: [{ amount: Math.floor(numAmount), label: "Charge" }],
-    });
-    ctx
-      .reply("Here is your deposit link", {
-        reply_markup: new grammy.InlineKeyboard().url("Star ⭐️", link),
-      })
-      .catch(() => {
-        console.error("Error sending deposit link:", error);
-      });
-  } catch (error) {
-    console.error("Error in handleDeposit:", error);
-    await ctx
-      .reply("An error occurred while processing your deposit.")
-      .catch(() => {});
-    return;
-  }
-};
 
 bot.hears(CHECK_NEW_GIFTS, checkAdmin, async (ctx) => {
   try {
@@ -214,6 +442,7 @@ bot.hears(CHECK_NEW_GIFTS, checkAdmin, async (ctx) => {
         star_count: 50,
         sticker: {
           emoji: "🧸",
+          custom_emoji_id: "5800818937767664668",
         },
       },
       {
@@ -222,6 +451,7 @@ bot.hears(CHECK_NEW_GIFTS, checkAdmin, async (ctx) => {
         star_count: 50,
         sticker: {
           emoji: "❤️",
+          custom_emoji_id: "5801133355143535614",
         },
       },
       {
@@ -230,6 +460,7 @@ bot.hears(CHECK_NEW_GIFTS, checkAdmin, async (ctx) => {
         star_count: 50,
         sticker: {
           emoji: "🧸",
+          custom_emoji_id: "5953779817148062423",
         },
       },
       {
@@ -238,44 +469,62 @@ bot.hears(CHECK_NEW_GIFTS, checkAdmin, async (ctx) => {
         star_count: 50,
         sticker: {
           emoji: "🎄",
+          custom_emoji_id: "5922793998929370825",
         },
       },
     ];
 
+    const keyboard = [];
+
+    let i = 0;
     for (const gift of listsOfGifts.gifts.concat(customGifts)) {
-      console.log(gift.gift_name);
-
-      await ctx
-        .reply(
-          `Cost: ${gift.star_count} ⭐️
-Emoji: ${gift?.sticker?.emoji || "N/A"}`,
-          {
-            reply_markup: {
-              inline_keyboard: [
-                [
-                  {
-                    callback_data: `buyforme_${gift.id}_${gift.star_count}`,
-                    text:
-                      "Purchase " + (gift?.sticker?.emoji || gift?.gift_name),
-                    style: "danger",
-                    icon_custom_emoji_id: gift.sticker?.custom_emoji_id,
-                  },
-                ],
-              ],
-            },
-          },
-        )
-        .catch((err) => {
-          console.log(err);
-        });
+      keyboard.push([
+        {
+          callback_data: `buyforme_${gift.id}_${gift.star_count}_${gift.sticker.custom_emoji_id}`,
+          text: "Purchase for myself",
+          style: i % 3 == 0 ? "success" : i % 3 == 1 ? "danger" : "primary",
+          icon_custom_emoji_id: gift.sticker?.custom_emoji_id,
+        },
+      ]);
+      i++;
+      //       await ctx
+      //         .reply(
+      //           `Cost: ${gift.star_count} ⭐️
+      // Emoji: ${gift?.sticker?.emoji || "N/A"}
+      // ${gift.gift_name || ""}`,
+      //           {
+      //             reply_markup: {
+      //               inline_keyboard: [
+      //                 [
+      //                   {
+      //                     callback_data: `buyforme_${gift.id}_${gift.star_count}`,
+      //                     text: "Purchase for myself",
+      //                     style: "success",
+      //                     icon_custom_emoji_id: gift.sticker?.custom_emoji_id,
+      //                   },
+      //                 ],
+      //                 // [
+      //                 //   {
+      //                 //     callback_data: `buyforfriend_${gift.id}_${gift.star_count}`,
+      //                 //     text: "Purchase for friend",
+      //                 //     style: "success",
+      //                 //     icon_custom_emoji_id: gift.sticker?.custom_emoji_id,
+      //                 //   },
+      //                 // ],
+      //               ],
+      //             },
+      //           },
+      // )
+      // .catch((err) => {
+      //   console.log(err);
+      // });
     }
-  } catch (error) {
-    console.error(error);
-  }
-});
 
-bot.hears(MARKET_HISTORY, checkAdmin, async (ctx) => {
-  try {
+    await ctx.reply("Here's the list of gifts for purchase", {
+      reply_markup: {
+        inline_keyboard: keyboard,
+      },
+    });
   } catch (error) {
     console.error(error);
   }

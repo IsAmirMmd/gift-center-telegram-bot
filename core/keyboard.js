@@ -21,54 +21,33 @@ const {
   MY_ACCOUNT,
   AUTO_PURCHASE_CONFIG,
   ALL_CONFIG,
+  SECRET_BOX,
 } = require("./actions");
 
 const clientKeyboard = new grammy.Keyboard()
-  .text(MY_ACCOUNT)
+  .text(MY_ACCOUNT, {
+    style: "primary",
+  })
   .row()
-  // .text(SMART_FILTER)
-  // .text(FILTERS.SEARCH)
-  // .row()
-  // .text(SHOW_GIFTS)
-  // .text(NEW_GIFT_SERIES)
-  // .text(REMOVE_GIFT)
-  // .row()
-  // .text(MODELS)
-  // .text(FLOOR_PRICE)
-  // .row()
-  // .text(FLOOR_COMPARE)
-  // .text(FLOOR_UPDATE)
-  // .row()
-  // .text(SHOW_CAHRT)
-  // .row()
-  .text(DEPOSIT)
-  .text(AUTO_PURCHASE_CONFIG)
-  .row()
-  .text(CHECK_NEW_GIFTS)
+  .text(CHECK_NEW_GIFTS, {
+    style: "success",
+  })
+  .text(SECRET_BOX, {
+    style: "danger",
+  })
   .row();
 
 const adminKeyboard = new grammy.Keyboard()
-  .text(MY_ACCOUNT)
+  .text(MY_ACCOUNT, {
+    style: "primary",
+  })
   .row()
-  // .text(SMART_FILTER)
-  // .text(FILTERS.SEARCH)
-  // .row()
-  // .text(SHOW_GIFTS)
-  // .text(NEW_GIFT_SERIES)
-  // .text(REMOVE_GIFT)
-  // .row()
-  // .text(MODELS)
-  // .text(FLOOR_PRICE)
-  // .row()
-  // .text(FLOOR_COMPARE)
-  // .text(FLOOR_UPDATE)
-  // .row()
-  // .text(SHOW_CAHRT)
-  // .row()
-  .text(DEPOSIT)
-  .text(AUTO_PURCHASE_CONFIG)
-  .row()
-  .text(CHECK_NEW_GIFTS)
+  .text(CHECK_NEW_GIFTS, {
+    style: "success",
+  })
+  .text(SECRET_BOX, {
+    style: "danger",
+  })
   .row()
   .text("- - - - - - - - - - -")
   .row()

@@ -30,7 +30,15 @@ const User = sequelize.define("User", {
     allowNull: true,
     defaultValue: 0.0,
   },
+  comment: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  friend: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
 });
 
 module.exports = User;
-// User.sync({ alter: true });
+User.sync({ alter: false });
