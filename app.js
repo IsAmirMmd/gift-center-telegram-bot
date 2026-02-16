@@ -183,17 +183,11 @@ bot.callbackQuery(/comment_[]*/, async (ctx) => {
   } catch (err) {}
 });
 
-const handleDeposit = async (ctx, price, gift_id, icon) => {
+const handleDeposit = async (ctx, price, gift_id) => {
   try {
     const amount = parseInt(price) * 1.2;
     const numAmount = Number(amount);
 
-    if (isNaN(numAmount) || numAmount < 0) {
-      await ctx
-        .editMessageText("❌ Please enter a valid amount greater than 100.")
-        .catch(() => {});
-      return;
-    }
     await updateStatus(ctx.chat.id, "START").catch(() => {});
 
     const link = await bot.api.raw["createInvoiceLink"]({
@@ -241,7 +235,7 @@ bot.callbackQuery(/buyforme_[]*/, async (ctx) => {
             .reply("Error in sending gift : " + error.description)
             .catch(() => {});
         });
-    } else await handleDeposit(ctx, price, gift_id, icon);
+    } else await handleDeposit(ctx, price, gift_id);
   } catch (error) {
     console.error("Error fetching gifts:", error);
   }
